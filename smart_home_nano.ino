@@ -195,7 +195,7 @@ void runScene(String name) {
   else if (name == "cinema")  { curtainPercent = 100; ledSet(25); }
   else if (name == "morning") { curtainPercent = 0; ledSet(40); heatTemp = 22; }
   else if (name == "night")   { mainLightSet(0); ledSet(0); heatTemp = 19; curtainPercent = 100; }
-  else if (name == "away")    { mainLightSet(0); ledSet(0); heatTemp = 19; pumpSet(0); acPowerSet(0); acFan = 1; curtainPercent = 100; }
+  else if (name == "away")    { mainLightSet(0); ledSet(0); heatTemp = 19; pumpSet(0); acPowerSet(0); acFan = 1; curtainPercent = 0; }
 }
 
 void sendStatus() {

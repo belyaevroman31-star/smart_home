@@ -453,17 +453,19 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
-    background: linear-gradient(180deg, rgba(30, 38, 70, 0.95), rgba(18, 24, 48, 0.92));
+    background: linear-gradient(180deg, rgba(30, 38, 70, 0.97), rgba(18, 24, 48, 0.95));
     opacity: 0;
-    border-radius: 12px;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.16);
   }
   .cmd-curtain.open .curtain-window {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    z-index: 60;
+    position: fixed;
+    left: 50%;
+    bottom: 92px;
+    transform: translateX(-50%);
+    width: min(620px, calc(100vw - 24px));
+    z-index: 95;
     max-height: min(46vh, 430px);
     overflow-y: auto;
     opacity: 1;
@@ -1105,6 +1107,13 @@
       if (el) el.style.background = k === m ? 'rgba(143,210,255,0.25)' : '';
     });
   }
+  function _acFan(v, silent) {
+    state.acFan = Math.max(1, Math.min(3, parseInt(v, 10)));
+    const sl = $('acFanSlider');
+    if (sl) sl.value = state.acFan;
+    const tv = $('acFanValue');
+    if (tv) tv.textContent = AC_FANS[state.acFan - 1];
+  }
 
   function toggleAc(on) {
     _ac(on);
@@ -1194,7 +1203,7 @@
         _ac(false);
         _acMode('cool');
         _acFan(1);
-        _curtains(100);
+        _curtains(0);
       }
     }
   };
