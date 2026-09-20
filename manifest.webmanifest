@@ -1,0 +1,53 @@
+{
+  "name": "Умный дом — пульт управления",
+  "short_name": "Умный дом",
+  "description": "Панель управления умным домом: свет, отопление, кондиционер, шторы, сценарии и голосовое управление.",
+  "lang": "ru",
+  "start_url": "./smart_home.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e21",
+  "theme_color": "#0a0e21",
+  "categories": ["utilities", "home", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Сценарий «Утро»",
+      "short_name": "Утро",
+      "url": "./smart_home.html?scene=morning",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Сценарий «Ночь»",
+      "short_name": "Ночь",
+      "url": "./smart_home.html?scene=night",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Сценарий «Покинуть дом»",
+      "short_name": "Пока",
+      "url": "./smart_home.html?scene=away",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

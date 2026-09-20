@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Умный дом — панель управления</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0a0e21">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Умный дом">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+<style>
+  :root {
+    --text: #f4f7fb;
+    --muted: rgba(240, 246, 255, 0.62);
+    --accent: #8fd2ff;
+    --green: #7ef3b0;
+    --red: #ff8fa8;
+    --amber: #ffd28a;
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-strong: rgba(255, 255, 255, 0.13);
+    --stroke: rgba(255, 255, 255, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    padding: 28px 24px 40px;
+    background:
+      radial-gradient(1200px 800px at 85% -10%, rgba(91, 84, 255, 0.35), transparent 60%),
+      radial-gradient(1000px 700px at -10% 20%, rgba(22, 170, 255, 0.28), transparent 55%),
+      radial-gradient(900px 700px at 50% 120%, rgba(255, 90, 170, 0.20), transparent 60%),
+      linear-gradient(160deg, #0a0e21 0%, #111631 50%, #0b0f24 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.5), transparent 2px),
+      radial-gradient(2px 2px at 70% 15%, rgba(255,255,255,0.4), transparent 2px),
+      radial-gradient(1.5px 1.5px at 40% 60%, rgba(255,255,255,0.35), transparent 2px),
+      radial-gradient(2px 2px at 85% 55%, rgba(255,255,255,0.35), transparent 2px),
+      radial-gradient(1.5px 1.5px at 10% 75%, rgba(255,255,255,0.3), transparent 2px),
+      radial-gradient(2px 2px at 55% 85%, rgba(255,255,255,0.3), transparent 2px);
+  }
+  ::selection { background: rgba(143, 210, 255, 0.35); }
+
+  /* --- Водяной знак --- */
+  .watermark {
+    position: fixed;
+    top: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: clamp(24px, 5vw, 60px);
+    font-weight: 300;
+    letter-spacing: 14px;
+    color: rgba(255, 255, 255, 0.07);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    text-shadow: 0 0 60px rgba(143, 210, 255, 0.2);
+  }
+
+  /* --- Шапка --- */
+  header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 auto 16px;
+    max-width: 1240px;
+    padding: 12px 20px;
+    border-radius: 24px;
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
+  header h1 { font-size: 20px; font-weight: 500; letter-spacing: 0.3px; }
+  header h1 span { color: var(--accent); font-weight: 600; }
+  .clock { color: var(--muted); font-size: 13px; font-weight: 400; }
+
+  /* --- Подключение Arduino / установка PWA --- */
+  .serial-box { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .serial-actions { display: flex; gap: 6px; align-items: center; }
+  .serial-btn {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  .serial-btn:hover { background: rgba(255, 255, 255, 0.18); }
+  .serial-btn .mat-icon { font-size: 16px; }
+  .serial-btn.on { border-color: var(--green); color: var(--green); box-shadow: 0 0 14px rgba(126, 243, 176, 0.35); }
+  .serial-status { font-size: 10px; color: var(--muted); max-width: 200px; text-align: right; }
+  .serial-status.online { color: var(--green); }
+
+  /* --- Сетка (один экран, без прокрутки) --- */
+  .layout {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    gap: 14px;
+    min-height: calc(100vh - 160px);
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr)) auto;
+    grid-template-areas:
+      "weather  light  heat  status"
+      "weather  led    ac    status"
+      "weather  curtains voice status"
+      "scenarios scenarios scenarios scenarios";
+  }
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    border-radius: 22px;
+    padding: 16px 18px 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255,255,255,0.16);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    transition: transform 0.25s ease, background 0.3s ease;
+  }
+  .card:hover { transform: translateY(-3px); background: var(--glass-strong); }
+  .card h2 {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.2px;
+  }
+  .card h2 .icon { font-size: 18px; }
+
+  .c-weather   { grid-area: weather; }
+  .c-light     { grid-area: light; }
+  .c-heat      { grid-area: heat; }
+  .c-led       { grid-area: led; }
+  .c-ac        { grid-area: ac; }
+  .c-voice     { grid-area: voice; }
+  .c-status    { grid-area: status; }
+  .c-curtains  { grid-area: curtains; }
+  .c-scenarios { grid-area: scenarios; }
+  .c-weather, .c-status { display: flex; flex-direction: column; justify-content: center; }
+
+  /* --- Материальные иконки --- */
+  .mat-icon {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--accent);
+    display: inline-block;
+    letter-spacing: normal;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+  }
+  .mat-icon.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    text-shadow: 0 0 14px rgba(143, 210, 255, 0.35);
+  }
+  .card h2 .mat-icon { font-size: 20px; margin-right: 4px; }
+  .header-ico { font-size: 26px; margin-right: 8px; }
+  .mic-btn .mat-icon { font-size: 28px; color: inherit; }
+  .scenario-btn .mat-icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  }
+
+  /* --- Переключатели --- */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .switch { position: relative; display: inline-block; width: 54px; height: 30px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 30px;
+    transition: background 0.3s, box-shadow 0.3s;
+    backdrop-filter: blur(6px);
+  }
+  .slider:before {
+    content: "";
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background: linear-gradient(160deg, #ffffff, #dbe4f2);
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  }
+  .switch input:checked + .slider {
+    background: linear-gradient(135deg, #7ef3b0, #22c55e);
+    border-color: transparent;
+    box-shadow: 0 0 18px rgba(126, 243, 176, 0.45);
+  }
+  .switch input:checked + .slider:before { transform: translateX(24px); }
+
+  /* --- Ползунки --- */
+  .control-row { margin-bottom: 8px; }
+  .control-row .label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .control-row .label-row b { color: var(--text); font-weight: 600; }
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.16);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, #c8d6ef 70%);
+    border: none;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    transition: transform 0.15s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e6eefb;
+    border: none;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  }
+  input[type=range]::-moz-range-track { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.16); }
+
+  .status-bulb {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .status-bulb.on { background: var(--green); box-shadow: 0 0 10px var(--green); }
+
+  /* --- Погода (компактный виджет слева) --- */
+  .weather-card { padding: 14px 14px 12px; }
+  .weather-card h2 { font-size: 14px; margin-bottom: 8px; }
+  .weather-loc { font-size: 11px; color: var(--muted); margin: 0 0 8px; letter-spacing: 0.4px; }
+  .weather-grid { display: flex; flex-direction: column; gap: 7px; }
+  .weather-day {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 12px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(8px);
+    text-align: left;
+  }
+  .weather-day:hover {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 0 1px rgba(143, 210, 255, 0.4);
+  }
+  .wd-line1 { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+  .wd-line1 .wd-name { font-weight: 600; }
+  .wd-line1 .wd-ico { font-size: 17px; margin: 0 6px; }
+  .wd-temps .max { color: var(--text); font-weight: 600; }
+  .wd-temps .min { color: var(--muted); margin-left: 6px; }
+  .wd-line2 { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .wd-line3 { font-size: 11px; font-weight: 500; margin-top: 3px; line-height: 1.35; }
+  .wd-warn { color: var(--amber); }
+  .wd-warn.severe { color: var(--red); }
+  .weather-loading { text-align: center; color: var(--muted); font-size: 13px; padding: 12px 0; }
+
+  /* --- Сценарии --- */
+  .scenarios { grid-area: scenarios; padding: 12px 14px; }
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .scenario-btn {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 14px;
+    padding: 10px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: transform 0.2s ease, background 0.25s, box-shadow 0.25s;
+    text-align: center;
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+  }
+  .scenario-btn:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(143, 210, 255, 0.35);
+  }
+  .scenario-btn:active { transform: translateY(0); }
+  .scenario-btn .mat-icon {
+    font-size: 22px;
+    display: block;
+    margin-bottom: 6px;
+    color: var(--accent);
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  }
+
+  /* --- Быстрые кнопки --- */
+  .quick-btn {
+    flex: 1;
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 14px;
+    padding: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin: 0 3px;
+    backdrop-filter: blur(10px);
+  }
+  .quick-btn:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(143, 210, 255, 0.5); }
+  .quick-btn:first-child { margin-left: 0; }
+  .quick-btn:last-child { margin-right: 0; }
+
+  /* --- Голос --- */
+  .voice-box { text-align: center; }
+  .mic-btn {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.28), rgba(255,255,255,0.06));
+    color: var(--accent);
+    font-size: 32px;
+    cursor: pointer;
+    transition: 0.25s;
+    margin-bottom: 14px;
+    line-height: 1;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    backdrop-filter: blur(12px);
+  }
+  .mic-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+  .mic-btn.listening {
+    background: radial-gradient(circle at 35% 30%, #ff5f7e, #e11d48);
+    border-color: rgba(255, 200, 210, 0.7);
+    color: #fff;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 95, 126, 0.55); }
+    70% { box-shadow: 0 0 0 18px rgba(255, 95, 126, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 95, 126, 0); }
+  }
+  .voice-status { color: var(--muted); font-size: 13px; margin-bottom: 10px; min-height: 42px; }
+  .voice-heard {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* --- Шторка со списком команд --- */
+  .cmd-curtain { position: relative; margin-top: 10px; border-radius: 16px; overflow: visible; border: 1px solid rgba(255,255,255,0.16); }
+  .curtain-window {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    background: linear-gradient(180deg, rgba(30, 38, 70, 0.95), rgba(18, 24, 48, 0.92));
+    opacity: 0;
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  }
+  .cmd-curtain.open .curtain-window {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    max-height: min(46vh, 430px);
+    overflow-y: auto;
+    opacity: 1;
+  }
+  .curtain-window .voice-hint { margin: 0; padding: 12px 12px 14px; }
+  .curtain-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.07));
+    border-top: 1px solid rgba(255,255,255,0.14);
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.2s;
+    user-select: none;
+    backdrop-filter: blur(10px);
+  }
+  .curtain-bar:hover { background: rgba(255, 255, 255, 0.22); }
+  .curtain-ico { display: inline-block; transition: transform 0.4s; font-size: 14px; }
+  .cmd-curtain.open .curtain-ico { transform: rotate(180deg); }
+  .voice-hint { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.7; text-align: left; color: var(--text); }
+  .voice-hint b { font-weight: 600; }
+
+  /* --- Всплывающее окно --- */
+  .voice-popup {
+    position: fixed;
+    top: 26px;
+    left: 50%;
+    transform: translate(-50%, -130%);
+    background: rgba(18, 24, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-left: 3px solid var(--accent);
+    border-radius: 20px;
+    padding: 16px 24px;
+    min-width: 320px;
+    max-width: 560px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s;
+    z-index: 200;
+    text-align: center;
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+  }
+  .voice-popup.show { transform: translate(-50%, 0); opacity: 1; }
+  .voice-popup-title { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+  .voice-popup-heard { font-size: 16px; color: var(--text); margin-bottom: 4px; font-weight: 500; }
+  .voice-popup-action { font-size: 13px; color: var(--green); }
+
+  /* --- Тост --- */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: rgba(18, 24, 48, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 100;
+    max-width: 320px;
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .status-panel { color: var(--muted); font-size: 13px; line-height: 2; }
+  .status-panel div { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .status-panel div:last-child { border-bottom: none; }
+  .status-panel b { color: var(--text); font-weight: 600; }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  /* --- Адаптивность: компактный режим на невысоких экранах (до 1920×1080) --- */
+  @media (max-height: 1180px) and (min-width: 900px) {
+    body { padding: 12px 18px 16px; }
+    .layout { gap: 10px; min-height: calc(100vh - 118px); }
+    .card { padding: 11px 14px 10px; border-radius: 18px; }
+    .card h2 { font-size: 13px; margin-bottom: 8px; }
+    .card h2 .icon { font-size: 17px; }
+    .control-row { margin-bottom: 6px; }
+    .control-row .label-row { font-size: 11px; margin-bottom: 6px; }
+    .toggle-row { margin-bottom: 6px; font-size: 12px; }
+    .header-ico { font-size: 22px; }
+    header h1 { font-size: 18px; }
+    header { margin: 0 auto 10px; padding: 9px 18px; }
+    header .clock { font-size: 12px; }
+    .scenario-btn { padding: 8px 6px; font-size: 12px; border-radius: 12px; }
+    .scenario-btn .mat-icon { font-size: 20px; margin-bottom: 4px; }
+    .scenario-grid { gap: 8px; }
+    .scenarios { padding: 10px 12px; }
+    .weather-card { padding: 10px 12px 9px; }
+    .weather-day { padding: 5px 8px; }
+    .wd-line1 { font-size: 12px; }
+    .quick-btn { padding: 8px 6px; font-size: 12px; }
+    .mic-btn { width: 56px; height: 56px; font-size: 28px; margin-bottom: 6px; }
+    .mic-btn .mat-icon { font-size: 26px; }
+    .voice-status { font-size: 11px; min-height: 32px; margin-bottom: 5px; }
+    .curtain-bar { padding: 7px 12px; font-size: 12px; }
+    .status-panel { font-size: 11.5px; line-height: 1.7; }
+    .status-panel div { padding: 2px 0; }
+    footer { margin-top: 8px; font-size: 10px; }
+  }
+
+  /* --- Узкие экраны: 2 колонки --- */
+  @media (max-width: 1100px) {
+    .layout {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: auto;
+      grid-template-areas:
+        "weather  light"
+        "heat     led"
+        "ac       curtains"
+        "status   voice"
+        "scenarios scenarios";
+    }
+  }
+
+  /* --- Мобильные: 1 колонка --- */
+  @media (max-width: 620px) {
+    body { padding: 12px 12px 16px; }
+    .layout {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "weather"
+        "light"
+        "heat"
+        "led"
+        "ac"
+        "curtains"
+        "status"
+        "voice"
+        "scenarios";
+    }
+    header { flex-direction: column; gap: 4px; }
+    .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="watermark">BELYAEV_PROJECT</div>
+
+<header>
+  <h1><span class="mat-icon filled header-ico">home</span>Умный <span>дом</span></h1>
+  <div class="serial-box">
+    <div class="serial-actions">
+      <button class="serial-btn" id="installBtn" onclick="installPwa()" style="display:none;"><span class="mat-icon filled">download</span><span>Установить</span></button>
+      <button class="serial-btn" id="serialBtn" onclick="toggleSerial()"><span class="mat-icon filled">usb</span><span id="serialBtnText">Arduino</span></button>
+    </div>
+    <span class="serial-status" id="serialStatus">не подключён</span>
+  </div>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="layout">
+
+  <!-- Погода за окном -->
+  <div class="card weather-card c-weather">
+    <h2><span class="icon mat-icon filled">partly_cloudy_day</span> Погода за окном</h2>
+    <div class="weather-loc">Нижний Новгород · нажмите на день для предупреждений</div>
+    <div class="weather-grid" id="weatherGrid">
+      <div class="weather-loading">Загружаем прогноз...</div>
+    </div>
+  </div>
+
+  <!-- Осноченое освещение -->
+  <div class="card c-light">
+    <h2><span class="icon mat-icon filled">light_mode</span> Основное освещение</h2>
+    <div class="toggle-row">
+      <label>Освещение</label>
+      <label class="switch">
+        <input type="checkbox" id="mainLight" onchange="toggleMainLight(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <p style="color:var(--muted); font-size:13px;">Статус:
+      <span id="mainLightStatus"><span class="status-bulb"></span>Выключено</span>
+    </p>
+  </div>
+
+  <!-- Отопление -->
+  <div class="card c-heat">
+    <h2><span class="icon mat-icon filled">device_thermostat</span> Отопление</h2>
+    <div class="control-row">
+      <div class="label-row">
+        <span>Температура</span>
+        <span><b id="tempValue">20</b> °C</span>
+      </div>
+      <input type="range" id="tempSlider" min="15" max="30" value="20" oninput="setTemp(this.value)">
+    </div>
+    <div class="toggle-row">
+      <label>Мотор рециркуляции теплоносителя</label>
+      <label class="switch">
+        <input type="checkbox" id="pump" onchange="togglePump(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Кондиционер -->
+  <div class="card c-ac">
+    <h2><span class="icon mat-icon filled">ac_unit</span> Кондиционер</h2>
+    <div class="toggle-row">
+      <label>Кондиционер</label>
+      <label class="switch">
+        <input type="checkbox" id="acToggle" onchange="toggleAc(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="acControls" style="opacity:0.45; transition: opacity 0.3s;">
+      <div class="control-row">
+        <div class="label-row">
+          <span>Температура</span>
+          <span><b id="acTempValue">22</b> °C</span>
+        </div>
+        <input type="range" id="acTempSlider" min="16" max="30" value="22" oninput="setAcTemp(this.value)">
+      </div>
+      <div class="control-row" style="margin-bottom:14px;">
+        <div class="label-row"><span>Режим</span></div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="quick-btn" id="acModeCool" onclick="setAcMode('cool')">❄ Охлаждение</button>
+          <button class="quick-btn" id="acModeHeat" onclick="setAcMode('heat')">🔥 Обогрев</button>
+          <button class="quick-btn" id="acModeDry" onclick="setAcMode('dry')">💧 Осушение</button>
+          <button class="quick-btn" id="acModeAuto" onclick="setAcMode('auto')">🔄 Авто</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="label-row">
+          <span>Скорость вентилятора</span>
+          <span><b id="acFanValue">Средняя</b></span>
+        </div>
+        <input type="range" id="acFanSlider" min="1" max="3" step="1" value="2" oninput="setAcFan(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Подсветка LED -->
+  <div class="card c-led">
+    <h2><span class="icon mat-icon filled">lightbulb</span> Светодиодная подсветка</h2>
+    <div class="toggle-row">
+      <label>Подсветка</label>
+      <label class="switch">
+        <input type="checkbox" id="ledToggle" onchange="toggleLed(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-row" id="ledBrightnessRow">
+      <div class="label-row">
+        <span>Яркость</span>
+        <span><b id="ledBrightness">0</b>%</span>
+      </div>
+      <input type="range" id="ledBrightnessSlider" min="0" max="100" value="0" oninput="setLedBrightness(this.value)">
+    </div>
+    <div class="preview" id="ledPreview" style="
+      height: 24px; border-radius: 8px; background: #0f172a;
+      border: 1px solid #334155; transition: box-shadow 0.3s;">
+    </div>
+  </div>
+
+  <!-- Шторы -->
+  <div class="card c-curtains">
+    <h2><span class="icon mat-icon filled">vertical_shades</span> Шторы</h2>
+    <div class="control-row">
+      <div class="label-row">
+        <span>Положение (закрытие)</span>
+        <span><b id="curtainsPercent">0</b>%</span>
+      </div>
+      <input type="range" id="curtainsSlider" min="0" max="100" step="1" value="0" oninput="setCurtains(this.value, false)">
+    </div>
+    <div class="toggle-row">
+      <label>Статус</label>
+      <span id="curtainsStatus" style="font-size:15px;">Открыты</span>
+    </div>
+    <div class="toggle-row">
+      <button class="quick-btn" onclick="setCurtains(0)">Открыть</button>
+      <button class="quick-btn" onclick="setCurtains(50)">Половина</button>
+      <button class="quick-btn" onclick="setCurtains(100)">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Голосовое управление -->
+  <div class="card c-voice">
+    <h2><span class="icon mat-icon filled">mic</span> Голосовое управление</h2>
+    <div class="voice-box">
+      <button class="mic-btn" id="micBtn" onclick="toggleVoice()"><span class="mat-icon filled">mic</span></button>
+      <div class="voice-status" id="voiceStatus">🎤 Скажите «дом» или нажмите на пиктограмму микрофона</div>
+      <div class="voice-heard" id="voiceHeard" style="display:none;"></div>
+      <div class="cmd-curtain" id="cmdCurtain">
+        <div class="curtain-window">
+          <div class="voice-hint">
+            <b>Перечень голосовых команд:</b><br>
+            🗣 Активация: скажите «дом» или нажмите на пиктограмму микрофона<br>
+            🗣 Затем — «включи свет», «выключи подсветку»<br>
+            🗣 Можно сразу: «дом, температура 24 градуса»<br>
+            🗣 «Яркость 50 процентов», «увеличь яркость»<br>
+            🗣 «Включи мотор», «шторы наполовину», «закрой шторы на 50 процентов»<br>
+            🗣 «закрой шторы», «раздвинь шторы»<br>
+            🗣 «включи кондиционер», «выключи кондиционер»<br>
+            🗣 Режимы: «включи охлаждение 24 градуса», «обогрев», «осушение»<br>
+            🗣 «кондиционер в авто-режиме», «скорость вентилятора выше/ниже»<br>
+            🗣 Автоматика: при снижении отопления кондиционер сам включится в «авто»,<br>
+            🗣 при повышении (нужно отопление) — кондиционер выключится<br>
+            🗣 Сценарии: «привет, я дома», «вечер», «кино», «утро», «ночь», «я ушёл», «пока»
+          </div>
+        </div>
+        <div class="curtain-bar" onclick="toggleCurtain()">
+          <span>🪟 Перечень голосовых команд</span>
+          <span class="curtain-ico" id="curtainIco">⌄</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Текущее состояние -->
+  <div class="card c-status">
+    <h2><span class="icon mat-icon filled">query_stats</span> Текущее состояние</h2>
+    <div class="status-panel" id="statusPanel">
+      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">light_mode</span>Основное освещение: <b>выключено</b></div>
+      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">lightbulb</span>Подсветка: <b>выключена (0%)</b></div>
+      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">device_thermostat</span>Отопление: <b>20 °C</b></div>
+      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">air</span>Мотор рециркуляции: <b>выключен</b></div>
+      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">ac_unit</span>Кондиционер: <b>выключен</b></div>
+      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">vertical_shades</span>Шторы: <b>открыты</b></div>
+    </div>
+  </div>
+
+  <!-- Сценарии -->
+  <div class="card scenarios c-scenarios">
+    <h2><span class="icon mat-icon filled">tune</span> Сценарии</h2>
+    <div class="scenario-grid">
+      <button class="scenario-btn" onclick="runScenario('home')">
+        <span class="mat-icon filled">waving_hand</span> Привет, я дома
+      </button>
+      <button class="scenario-btn" onclick="runScenario('evening')">
+        <span class="mat-icon filled">wb_twilight</span> Наступил вечер
+      </button>
+      <button class="scenario-btn" onclick="runScenario('cinema')">
+        <span class="mat-icon filled">movie</span> Кино
+      </button>
+      <button class="scenario-btn" onclick="runScenario('morning')">
+        <span class="mat-icon filled">wb_sunny</span> Утро
+      </button>
+      <button class="scenario-btn" onclick="runScenario('night')">
+        <span class="mat-icon filled">dark_mode</span> Ночь
+      </button>
+      <button class="scenario-btn" onclick="runScenario('away')">
+        <span class="mat-icon filled">door_sliding</span> Я ушёл / Пока
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<div class="voice-popup" id="voicePopup">
+  <div class="voice-popup-title">Голосовая команда</div>
+  <div class="voice-popup-heard" id="voicePopupHeard"></div>
+  <div class="voice-popup-action" id="voicePopupAction"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>Панель управления умным домом · локальная демонстрация</footer>
+
+<script>
+  // Состояние системы
+  const state = {
+    mainLight: false,
+    led: false,
+    ledBrightness: 0,
+    temp: 20,
+    pump: false,
+    curtains: 0,
+    ac: false,
+    acTemp: 22,
+    acMode: 'cool',
+    acFan: 2
+  };
+
+  const $ = id => document.getElementById(id);
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function updateClock() {
+    $('clock').textContent = new Date().toLocaleString('ru-RU');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // --- Управление устройствами ---
+
+  function toggleMainLight(on) {
+    state.mainLight = on;
+    $('mainLight').checked = on;
+    $('mainLightStatus').innerHTML = on
+      ? '<span class="status-bulb on"></span>Включено'
+      : '<span class="status-bulb"></span>Выключено';
+    showToast(on ? '🔆 Основное освещение включено' : '🌙 Основное освещение выключено');
+    sendToSerial('L=' + (on ? 1 : 0));
+    updateStatus();
+  }
+
+  function setTemp(v) {
+    const oldTemp = state.temp;
+    state.temp = parseInt(v, 10);
+    $('tempSlider').value = state.temp;
+    $('tempValue').textContent = state.temp;
+    showToast('♨️ Отопление: ' + state.temp + ' °C');
+    // При повышении температуры мотор рециркуляции включается,
+    // при понижении — выключается
+    if (state.temp > oldTemp && !state.pump) {
+      togglePump(true);
+    } else if (state.temp < oldTemp && state.pump) {
+      togglePump(false);
+    }
+    // Если нужно снижение температуры — кондиционер автоматически
+    // выставляется на эту температуру в режиме «авто».
+    // Если нужно включить отопление — кондиционер выключается.
+    if (state.temp < oldTemp) {
+      _ac(true);
+      _acMode('auto');
+      _acTemp(state.temp);
+    } else if (state.temp > oldTemp && state.ac) {
+      _ac(false);
+    }
+    syncAfter(150);
+    updateStatus();
+  }
+
+  function togglePump(on) {
+    state.pump = on;
+    $('pump').checked = on;
+    showToast(on ? '🌀 Мотор рециркуляции запущен' : '🌀 Мотор рециркуляции остановлен');
+    sendToSerial('PUMP=' + (on ? 1 : 0));
+    updateStatus();
+  }
+
+  function toggleLed(on) {
+    state.led = on;
+    $('ledToggle').checked = on;
+    if (!on) state.ledBrightness = 0;
+    else if (state.ledBrightness < 10) state.ledBrightness = 90; // авт. 90% при включении
+    $('ledBrightnessSlider').value = state.ledBrightness;
+    $('ledBrightness').textContent = state.ledBrightness;
+    updateLedPreview();
+    showToast(on ? '✨ Подсветка включена (' + state.ledBrightness + '%)' : '🌑 Подсветка выключена');
+    sendToSerial('LED=' + state.ledBrightness);
+    updateStatus();
+  }
+
+  function setLedBrightness(v) {
+    state.ledBrightness = parseInt(v, 10);
+    $('ledBrightnessSlider').value = state.ledBrightness;
+    $('ledBrightness').textContent = state.ledBrightness;
+    updateLedPreview();
+    showToast('✨ Яркость подсветки: ' + state.ledBrightness + '%');
+    syncAfter(120);
+    updateStatus();
+  }
+
+  function updateLedPreview() {
+    const p = $('ledPreview');
+    if (state.led && state.ledBrightness > 0) {
+      p.style.background = 'radial-gradient(circle, rgba(56,189,248,' + (state.ledBrightness / 100) + ') 0%, #0f172a 70%)';
+      p.style.boxShadow = '0 0 ' + (state.ledBrightness / 10) + 'px rgba(56,189,248,' + (state.ledBrightness / 100) + ')';
+    } else {
+      p.style.background = '#0f172a';
+      p.style.boxShadow = 'none';
+    }
+  }
+
+  function curtainsLabel(p) {
+    p = Math.round(p);
+    if (p <= 0) return 'Открыты';
+    if (p >= 100) return 'Закрыты';
+    if (p >= 40 && p <= 60) return 'Полуоткрыты (50%)';
+    return 'Прикрыты (' + p + '%)';
+  }
+
+  function curtainsSuffix(p) {
+    p = Math.round(p);
+    if (p <= 0) return 'раздвинуты';
+    if (p >= 100) return 'задвинуты полностью';
+    return 'прикрыты на ' + p + '%';
+  }
+
+  let curtainsAnimId = null;
+
+  function cancelCurtainsAnim() {
+    if (curtainsAnimId) {
+      cancelAnimationFrame(curtainsAnimId);
+      curtainsAnimId = null;
+    }
+  }
+
+  function applyCurtains(v) {
+    state.curtains = Math.max(0, Math.min(100, Math.round(v)));
+    $('curtainsSlider').value = state.curtains;
+    $('curtainsPercent').textContent = state.curtains;
+    $('curtainsStatus').textContent = curtainsLabel(state.curtains);
+    updateStatus();
+  }
+
+  // Плавное движение ползунка к заданному положению
+  function animateCurtains(from, to, silent) {
+    cancelCurtainsAnim();
+    const dur = 800;
+    const t0 = performance.now();
+
+    function step(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      applyCurtains(from + (to - from) * eased);
+      if (p < 1) {
+        curtainsAnimId = requestAnimationFrame(step);
+      } else {
+        curtainsAnimId = null;
+        if (!silent) showToast('🪟 Шторы ' + curtainsSuffix(to));
+      }
+    }
+    curtainsAnimId = requestAnimationFrame(step);
+  }
+
+  function setCurtains(v, animate) {
+    const target = Math.max(0, Math.min(100, parseInt(v, 10)));
+    if (animate === undefined) animate = true;
+    syncAfter(120);
+    if (!animate) {
+      cancelCurtainsAnim();
+      applyCurtains(target);
+      showToast('🪟 Шторы ' + curtainsSuffix(target));
+      return;
+    }
+    if (state.curtains === target) {
+      applyCurtains(target);
+      showToast('🪟 Шторы ' + curtainsSuffix(target));
+      return;
+    }
+    animateCurtains(state.curtains, target, false);
+  }
+
+  // Программное управление (внутреннее, без "шумных" уведомлений)
+  function _main(on, silent) {
+    state.mainLight = on;
+    $('mainLight').checked = on;
+    $('mainLightStatus').innerHTML = on
+      ? '<span class="status-bulb on"></span>Включено'
+      : '<span class="status-bulb"></span>Выключено';
+  }
+  function _temp(v, silent) {
+    const oldTemp = state.temp;
+    state.temp = v;
+    $('tempSlider').value = v;
+    $('tempValue').textContent = v;
+    if (state.temp > oldTemp && !state.pump) _pump(true);
+    else if (state.temp < oldTemp && state.pump) _pump(false);
+    // Снижение температуры → кондиционер авто на эту температуру,
+    // повышение (отопление) → кондиционер выключается
+    if (state.temp < oldTemp) {
+      _ac(true);
+      _acMode('auto');
+      _acTemp(state.temp);
+    } else if (state.temp > oldTemp && state.ac) {
+      _ac(false);
+    }
+  }
+  function _pump(on, silent) {
+    state.pump = on;
+    $('pump').checked = on;
+  }
+  function _led(on, brightness, silent) {
+    state.led = on;
+    state.ledBrightness = on ? brightness : 0;
+    $('ledToggle').checked = on;
+    $('ledBrightnessSlider').value = state.ledBrightness;
+    $('ledBrightness').textContent = state.ledBrightness;
+    updateLedPreview();
+  }
+  function _curtains(v, silent) {
+    const target = Math.max(0, Math.min(100, parseInt(v, 10)));
+    if (state.curtains === target) {
+      applyCurtains(target);
+      return;
+    }
+    animateCurtains(state.curtains, target, true); // без уведомления — сценарий покажет свой тост
+  }
+
+  // --- Кондиционер ---
+
+  const AC_MODES = {
+    cool: { label: '❄ Охлаждение' },
+    heat: { label: '🔥 Обогрев' },
+    dry:  { label: '💧 Осушение' },
+    auto: { label: '🔄 Авто' }
+  };
+  const AC_FANS = ['Низкая', 'Средняя', 'Высокая'];
+
+  function _ac(on, silent) {
+    state.ac = on;
+    $('acToggle').checked = on;
+    $('acControls').style.opacity = on ? '1' : '0.45';
+  }
+  function _acTemp(v, silent) {
+    state.acTemp = Math.max(16, Math.min(30, parseInt(v, 10)));
+    $('acTempSlider').value = state.acTemp;
+    $('acTempValue').textContent = state.acTemp;
+  }
+  function _acMode(m, silent) {
+    if (!AC_MODES[m]) return;
+    state.acMode = m;
+    ['cool', 'heat', 'dry', 'auto'].forEach(function (k) {
+      const el = $('acMode' + k.charAt(0).toUpperCase() + k.slice(1));
+      if (el) el.style.background = k === m ? 'rgba(143,210,255,0.25)' : '';
+    });
+  }
+
+  function toggleAc(on) {
+    _ac(on);
+    showToast(on ? '❄ Кондиционер включён' : '❄ Кондиционер выключен');
+    sendToSerial('AC=' + (on ? 1 : 0));
+    syncAfter(120);
+    updateStatus();
+  }
+
+  function setAcTemp(v) {
+    _acTemp(v);
+    showToast('❄ Кондиционер: ' + state.acTemp + ' °C');
+    syncAfter(120);
+    updateStatus();
+  }
+
+  function setAcMode(m) {
+    if (!AC_MODES[m]) return;
+    _acMode(m);
+    showToast('❄ Режим кондиционера: ' + AC_MODES[m].label.replace(/^.. /, ''));
+    sendToSerial('ACMODE=' + m);
+    updateStatus();
+  }
+
+  function setAcFan(v) {
+    state.acFan = Math.max(1, Math.min(3, parseInt(v, 10)));
+    $('acFanSlider').value = state.acFan;
+    $('acFanValue').textContent = AC_FANS[state.acFan - 1];
+    showToast('❄ Вентилятор кондиционера: ' + AC_FANS[state.acFan - 1]);
+    syncAfter(120);
+    updateStatus();
+  }
+
+  // --- Сценарии ---
+
+  const scenarios = {
+    home: {
+      name: 'Привет, я дома',
+      run() {
+        _main(true);
+        _led(true, 75);
+        _temp(24);
+        _pump(true);
+        _curtains(0);
+      }
+    },
+    evening: {
+      name: 'Наступил вечер',
+      run() {
+        _main(false);
+        _led(true, 50);
+        _temp(21);
+        _curtains(100);
+      }
+    },
+    cinema: {
+      name: 'Кино',
+      run() {
+        _curtains(100);
+        _led(true, 25);
+      }
+    },
+    morning: {
+      name: 'Утро',
+      run() {
+        _curtains(0);
+        _led(true, 40);
+        _temp(22);
+      }
+    },
+    night: {
+      name: 'Ночь',
+      run() {
+        _main(false);
+        _led(false, 0);
+        _temp(19);
+        _curtains(100);
+      }
+    },
+    away: {
+      name: 'Я ушёл / Пока',
+      run() {
+        _main(false);
+        _temp(19);
+      }
+    }
+  };
+
+  function runScenario(key) {
+    const sc = scenarios[key];
+    if (!sc) return;
+    sc.run();
+    updateStatus();
+    showToast('🎛️ Сценарий «' + sc.name + '» применён');
+    sendToSerial('SCENE=' + key);
+    syncAfter(150);
+  }
+
+  // --- Связь с Arduino (Web Serial) ---
+  // Протокол команд см. в smart_home_nano.ino
+  let arduinoPort = null;
+  let arduinoWriter = null;
+  let arduinoReader = null;
+  let arduinoConnected = false;
+  let debounceTimer = null;
+
+  function serialSupported() {
+    return ('serial' in navigator);
+  }
+
+  function updateArduinoUI() {
+    const btn = $('serialBtn');
+    const txt = $('serialBtnText');
+    const st = $('serialStatus');
+    if (arduinoConnected) {
+      btn.classList.add('on');
+      txt.textContent = 'Arduino ✓';
+      st.textContent = 'нано подключён · 9600';
+      st.classList.add('online');
+    } else {
+      btn.classList.remove('on');
+      txt.textContent = 'Arduino';
+      st.textContent = 'не подключён';
+      st.classList.remove('online');
+    }
+  }
+
+  function sendToSerial(cmd) {
+    if (!arduinoWriter) return;
+    try {
+      const enc = new TextEncoder();
+      arduinoWriter.write(enc.encode(cmd + '\n'));
+    } catch (e) {}
+  }
+
+  function syncAfter(delay) {
+    if (!arduinoConnected) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(sendAllState, delay == null ? 200 : delay);
+  }
+
+  async function toggleSerial() {
+    if (arduinoConnected) {
+      await disconnectSerial();
+      return;
+    }
+    if (!serialSupported()) {
+      showToast('Web Serial недоступен. Откройте страницу как https://localhost (локальный сервер) в Chrome.');
+      return;
+    }
+    try {
+      arduinoPort = await navigator.serial.requestPort();
+      await arduinoPort.open({ baudRate: 9600 });
+      arduinoWriter = arduinoPort.writable.getWriter();
+      arduinoConnected = true;
+      updateArduinoUI();
+      showToast('🔌 Arduino подключён');
+      startSerialRead();
+      sendAllState();
+    } catch (err) {
+      arduinoPort = null;
+    }
+  }
+
+  async function disconnectSerial() {
+    arduinoConnected = false;
+    updateArduinoUI();
+    if (arduinoReader) { try { arduinoReader.cancel(); } catch (e) {} arduinoReader = null; }
+    if (arduinoWriter) { try { arduinoWriter.releaseLock(); } catch (e) {} arduinoWriter = null; }
+    if (arduinoPort) { try { await arduinoPort.close(); } catch (e) {} arduinoPort = null; }
+    showToast('🔌 Arduino отключён');
+  }
+
+  async function startSerialRead() {
+    if (!arduinoPort || !arduinoPort.readable) return;
+    try {
+      arduinoReader = arduinoPort.readable.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      while (arduinoConnected) {
+        const { value, done } = await arduinoReader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf('\n')) !== -1) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (line) handleArduinoStatus(line);
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Ответ Arduino вида "L=1;LED=75;TEMP=24;PUMP=1;AC=1;ACTEMP=22;ACMODE=auto;ACFAN=2;CUR=50"
+  function handleArduinoStatus(line) {
+    if (line.indexOf('=') < 0) return;
+    const vals = {};
+    line.split(';').forEach(function (p) {
+      const i = p.indexOf('=');
+      if (i > 0) vals[p.slice(0, i)] = p.slice(i + 1);
+    });
+    if ('L' in vals) _main(vals.L === '1');
+    if ('LED' in vals) _led(vals.LED !== '0', parseInt(vals.LED, 10) || 0);
+    if ('PUMP' in vals) _pump(vals.PUMP === '1');
+    if ('CUR' in vals && vals.CUR !== '' && !isNaN(parseInt(vals.CUR, 10))) {
+      cancelCurtainsAnim();
+      applyCurtains(parseInt(vals.CUR, 10));
+    }
+  }
+
+  // Полная синхронизация состояния панели → Arduino
+  function sendAllState() {
+    sendToSerial('L=' + (state.mainLight ? 1 : 0));
+    sendToSerial('LED=' + (state.led ? state.ledBrightness : 0));
+    sendToSerial('TEMP=' + state.temp);
+    sendToSerial('PUMP=' + (state.pump ? 1 : 0));
+    sendToSerial('AC=' + (state.ac ? 1 : 0));
+    sendToSerial('ACTEMP=' + state.acTemp);
+    sendToSerial('ACMODE=' + state.acMode);
+    sendToSerial('ACFAN=' + state.acFan);
+    sendToSerial('CUR=' + state.curtains);
+  }
+
+  // --- Панель состояния ---
+
+  function updateStatus() {
+    const icon = function (n, c) {
+      return '<span class="mat-icon filled" style="font-size:15px; color:' + (c || 'var(--accent)') + '; margin-right:6px; vertical-align:-2px;">' + n + '</span>';
+    };
+    $('statusPanel').innerHTML =
+      '<div>' + icon('light_mode') + 'Основное освещение: <b>' + (state.mainLight ? 'включено' : 'выключено') + '</b></div>' +
+      '<div>' + icon('lightbulb') + 'Подсветка: <b>' + (state.led ? 'включена (' + state.ledBrightness + '%)' : 'выключена') + '</b></div>' +
+      '<div>' + icon('device_thermostat') + 'Отопление: <b>' + state.temp + ' °C</b></div>' +
+      '<div>' + icon('air') + 'Мотор рециркуляции: <b>' + (state.pump ? 'работает' : 'выключен') + '</b></div>' +
+      '<div>' + icon('ac_unit') + 'Кондиционер: <b>' + (state.ac ? 'включён (' + state.acTemp + ' °C, ' + AC_MODES[state.acMode].label.replace(/^.. /, '') + ')' : 'выключен') + '</b></div>' +
+      '<div>' + icon('vertical_shades') + 'Шторы: <b>' + curtainsLabel(state.curtains) + '</b></div>';
+  }
+
+  // --- Голосовое управление ---
+
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  let voiceListening = false;
+  let voiceArmed = false;
+
+  function activateVoice() {
+    voiceArmed = true;
+    $('voiceStatus').textContent = '✅ Голосовое управление активно. Скажите команду.';
+    showToast('✅ Голосовое управление активно, скажите команду');
+  }
+
+  function voiceSupported() {
+    if (!SpeechRec) {
+      $('voiceStatus').textContent = 'Голосовое управление не поддерживается этим браузером (нужен Chrome/Edge).';
+      return false;
+    }
+    return true;
+  }
+
+  function toggleVoice() {
+    if (!voiceSupported()) return;
+    if (!voiceListening) {
+      // Нажатие на микрофон с холодного старта — включаем и сразу активируем команды
+      startVoice();
+      activateVoice();
+      return;
+    }
+    if (voiceArmed) {
+      // Повторное нажатие — выключаем микрофон
+      stopVoice();
+      return;
+    }
+    // Микрофон уже слушает — активируем режим команд
+    activateVoice();
+  }
+
+  function startVoice() {
+    voiceArmed = false;
+    recognizer = new SpeechRec();
+    recognizer.lang = 'ru-RU';
+    recognizer.continuous = true;
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    recognizer.onstart = function () {
+      voiceListening = true;
+      $('micBtn').classList.add('listening');
+      $('voiceStatus').textContent = '🎤 Слушаю... скажите «дом» или нажмите на микрофон';
+    };
+    recognizer.onresult = function (event) {
+      // Перебираем все новые результаты (в continuous-режиме их бывает несколько за раз)
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = norm(event.results[i][0].transcript || '');
+        $('voiceHeard').textContent = 'Распознано: «' + text + '»';
+        $('voiceHeard').style.display = 'block';
+        let handled = false;
+
+        if (!voiceArmed) {
+          // Ждём wake-слово «дом»
+          const m = text.match(/^дом\b(.*)$/);
+          if (!m) continue; // не wake-слово — пропускаем
+
+          const rest = (m[1] || '').trim();
+          if (rest) {
+            // «дом, закрой шторы на половину», «дом, открой шторы» и т.п.
+            voiceArmed = true;
+            const action = processVoiceCommand(rest);
+            voiceArmed = false;
+            if (action) {
+              showVoiceFeedback(text, action);
+              handled = true;
+            }
+          } else {
+            // Просто «дом» — активируем слушание команд
+            activateVoice();
+          }
+        } else {
+          // Режим команды активен
+          const action = processVoiceCommand(text);
+          if (action) {
+            showVoiceFeedback(text, action);
+            handled = true;
+          }
+          voiceArmed = false;
+          $('voiceStatus').textContent = '🎤 Слушаю... скажите «дом» или нажмите на микрофон';
+        }
+
+        if (handled) break;
+      }
+    };
+    recognizer.onerror = function (event) {
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        $('voiceStatus').textContent = 'Доступ к микрофону запрещён. Разрешите его или нажмите кнопку микрофона.';
+      } else if (event.error !== 'no-speech') {
+        $('voiceStatus').textContent = 'Ошибка распознавания: ' + event.error;
+      }
+    };
+    recognizer.onend = function () {
+      voiceListening = false;
+      voiceArmed = false;
+      $('micBtn').classList.remove('listening');
+      if (!recognizer) return;
+      $('voiceStatus').textContent = 'Нажмите на микрофон или скажите «дом»';
+    };
+
+    try {
+      recognizer.start();
+    } catch (e) {
+      // уже запущен — игнорируем
+    }
+  }
+
+  function stopVoice() {
+    if (recognizer) {
+      recognizer.stop();
+      recognizer = null;
+    }
+    voiceListening = false;
+    voiceArmed = false;
+    $('micBtn').classList.remove('listening');
+    $('voiceStatus').textContent = 'Микрофон выключен. Нажмите на пиктограмму, чтобы включить';
+  }
+
+  function norm(s) {
+    s = s.toLowerCase().replace(/ё/g, 'е');
+    s = s.replace(/[.,!?]/g, ' ').replace(/\s+/g, ' ').trim();
+    return s;
+  }
+  function includesAny(text, words) {
+    return words.some(function (w) { return text.indexOf(w) !== -1; });
+  }
+
+  function processVoiceCommand(raw) {
+    const text = norm(raw);
+    let action = '';
+
+    // Сценарии — проверяем первыми
+    const scenarioMap = [
+      { key: 'home',    words: ['привет я дома', 'привет я дом', 'я дома', 'привет', 'дома'] },
+      { key: 'evening', words: ['вечер', 'наступил вечер', 'вечер наступил'] },
+      { key: 'cinema',  words: ['кино', 'фильм'] },
+      { key: 'morning', words: ['утро', 'доброе утро'] },
+      { key: 'night',   words: ['ночь', 'спать', 'спокойной ночи'] },
+      { key: 'away',    words: ['я ушел', 'я ушол', 'я ушла', 'пока', 'до свидания', 'ухожу', 'вышел'] }
+    ];
+
+    for (let i = 0; i < scenarioMap.length; i++) {
+      if (includesAny(text, scenarioMap[i].words)) {
+        runScenario(scenarioMap[i].key);
+        action = 'Сценарий: «' + scenarios[scenarioMap[i].key].name + '»';
+        break;
+      }
+    }
+
+    if (action === '') {
+      const numMatch = text.match(/(\d{1,3})/g);
+      const firstNum = numMatch ? parseInt(numMatch[0], 10) : NaN;
+
+      // Основное освещение
+      if (includesAny(text, ['включи свет', 'зажги свет', 'свет включай'])) {
+        toggleMainLight(true);
+        action = 'Основное освещение включено';
+      } else if (includesAny(text, ['выключи свет', 'погаси свет', 'свет выключи', 'отключи свет'])) {
+        toggleMainLight(false);
+        action = 'Основное освещение выключено';
+      }
+    }
+
+    if (action === '') {
+      // Подсветка
+      if (includesAny(text, ['включи подсвет', 'включи подсв', 'подсветку включи'])) {
+        toggleLed(true);
+        action = 'Подсветка включена';
+      } else if (includesAny(text, ['выключи подсвет', 'отключи подсвет'])) {
+        toggleLed(false);
+        action = 'Подсветка выключена';
+      }
+    }
+
+    if (action === '') {
+      // Яркость
+      if (includesAny(text, ['яркост', 'яркость'])) {
+        let v = NaN;
+        if (firstNum) v = firstNum;
+        else if (includesAny(text, ['увелич', 'выше', 'больше'])) v = Math.min(100, state.ledBrightness + 10);
+        else if (includesAny(text, ['уменьш', 'ниже', 'меньше'])) v = Math.max(0, state.ledBrightness - 10);
+        else if (includesAny(text, ['максима', 'макс'])) v = 100;
+        else if (includesAny(text, ['миниму', 'мин'])) v = 0;
+        if (!isNaN(v)) {
+          toggleLed(true);
+          setLedBrightness(v);
+          action = 'Яркость подсветки: ' + v + '%';
+        }
+      }
+    }
+
+    if (action === '') {
+      // Кондиционер (проверяем до температуры, чтобы не перепутать с отоплением)
+      const acContext = includesAny(text, ['кондиционер', 'кондей', 'кондер']);
+      if (acContext || includesAny(text, ['охлажд', 'обогрев', 'осушен'])) {
+        // Определяем режим работы
+        let mode = '';
+        if (includesAny(text, ['охлажд', 'холод'])) mode = 'cool';
+        else if (includesAny(text, ['обогрев', 'горяч', 'нагрев'])) mode = 'heat';
+        else if (includesAny(text, ['осушен', 'суш'])) mode = 'dry';
+        else if (acContext && includesAny(text, ['авто', 'автомат'])) mode = 'auto';
+
+        if (mode) {
+          toggleAc(true);
+          setAcMode(mode);
+          if (firstNum) {
+            setAcTemp(firstNum);
+            action = 'Кондиционер: ' + AC_MODES[mode].label.replace(/^..? /, '') + ' ' + firstNum + ' °C';
+          } else {
+            action = 'Кондиционер: ' + AC_MODES[mode].label.replace(/^..? /, '');
+          }
+        } else if (acContext && includesAny(text, ['выключи', 'выключ', 'отключи', 'стоп', 'останови'])) {
+          toggleAc(false);
+          action = 'Кондиционер выключен';
+        } else if (acContext && includesAny(text, ['включи', 'включ', 'запусти', 'запуск'])) {
+          toggleAc(true);
+          action = 'Кондиционер включён (' + state.acTemp + ' °C)';
+        } else if (acContext && firstNum) {
+          toggleAc(true);
+          setAcTemp(firstNum);
+          action = 'Кондиционер: ' + firstNum + ' °C';
+        }
+      }
+    }
+
+    if (action === '') {
+      // Вентилятор кондиционера (по скоростям работы)
+      if (includesAny(text, ['вентилятор', 'скорость', 'обдув'])) {
+        let f = NaN;
+        if (firstNum && firstNum >= 1 && firstNum <= 3) f = firstNum;
+        else if (includesAny(text, ['высок', 'максим', 'больше', 'сильн', 'более'])) f = 3;
+        else if (includesAny(text, ['средн', 'середина'])) f = 2;
+        else if (includesAny(text, ['низк', 'минимальн', 'меньше', 'тише', 'слаб'])) f = 1;
+        if (!isNaN(f)) {
+          toggleAc(true);
+          setAcFan(f);
+          action = 'Вентилятор кондиционера: ' + AC_FANS[f - 1];
+        }
+      }
+    }
+
+    if (action === '') {
+      // Температура / отопление
+      if (includesAny(text, ['температур', 'градус', 'отоплен', 'тепло'])) {
+        let v = NaN;
+        if (includesAny(text, ['увелич', 'выше'])) v = Math.min(30, state.temp + 1);
+        else if (includesAny(text, ['уменьш', 'ниже'])) v = Math.max(15, state.temp - 1);
+        else if (firstNum) v = firstNum;
+        if (!isNaN(v)) {
+          v = Math.max(15, Math.min(30, v));
+          setTemp(v);
+          action = 'Отопление: ' + v + ' °C';
+        }
+      }
+    }
+
+    if (action === '') {
+      // Мотор рециркуляции
+      if (includesAny(text, ['включи мотор', 'запусти мотор', 'включи насос', 'запусти насос'])) {
+        togglePump(true);
+        action = 'Мотор рециркуляции запущен';
+      } else if (includesAny(text, ['выключи мотор', 'останови мотор', 'выключи насос', 'останови насос'])) {
+        togglePump(false);
+        action = 'Мотор рециркуляции остановлен';
+      }
+    }
+
+    if (action === '') {
+      // Шторы
+      if (includesAny(text, ['штор', 'шторы', 'занавес', 'затемни'])) {
+        let v = NaN;
+        const halfWord = includesAny(text, ['половину', 'половина', 'половины', 'наполовину', 'в половину', 'пол штора', '50 проц', 'пятьдесят', '50%', '5 проц']);
+        if (halfWord) v = 50;
+        else if (firstNum) v = firstNum;
+        else if (includesAny(text, ['задвинь', 'закрой', 'закрывай', 'закрыть', 'затемни'])) v = 100;
+        else if (includesAny(text, ['раздвинь', 'открой', 'открывай', 'открыть', 'открой окно', 'подними штор'])) v = 0;
+        if (!isNaN(v)) {
+          v = Math.max(0, Math.min(100, v));
+          setCurtains(v);
+          action = 'Шторы: ' + curtainsLabel(v);
+        }
+      }
+    }
+
+    if (action === '' && text) {
+      showToast('🤔 Не понял команду: «' + raw + '»');
+    }
+    return action;
+  }
+
+  // Всплывающее окно + шторка
+  let popupTimer = null;
+  let curtainTimer = null;
+
+  function showVoiceFeedback(heard, action) {
+    $('voicePopupHeard').textContent = '🎤 «' + heard + '»';
+    $('voicePopupAction').textContent = action || '';
+    const p = $('voicePopup');
+    p.classList.add('show');
+    clearTimeout(popupTimer);
+    popupTimer = setTimeout(function () { p.classList.remove('show'); }, 4000);
+    // Шторка со списком команд открывается при произношении команды
+    openCurtain();
+  }
+
+  function openCurtain() {
+    $('cmdCurtain').classList.add('open');
+    clearTimeout(curtainTimer);
+    curtainTimer = setTimeout(function () { $('cmdCurtain').classList.remove('open'); }, 6000);
+  }
+
+  function closeCurtain() {
+    clearTimeout(curtainTimer);
+    $('cmdCurtain').classList.remove('open');
+  }
+
+  function toggleCurtain() {
+    if ($('cmdCurtain').classList.contains('open')) {
+      closeCurtain();
+    } else {
+      openCurtain();
+    }
+  }
+
+  // --- Погода за окном (Open-Meteo, бесплатно без ключа) ---
+
+  const WEATHER_LAT = 56.363769;
+  const WEATHER_LON = 43.806018;
+
+  const WMO = {
+    0:  { ico: '☀️', label: 'Ясно' },
+    1:  { ico: '🌤️', label: 'Переменная облачность' },
+    2:  { ico: '⛅', label: 'Переменная облачность' },
+    3:  { ico: '☁️', label: 'Пасмурно' },
+    45: { ico: '🌫️', label: 'Туман' },
+    48: { ico: '🌫️', label: 'Изморозь' },
+    51: { ico: '🌦️', label: 'Морось' },
+    53: { ico: '🌦️', label: 'Морось' },
+    55: { ico: '🌦️', label: 'Морось' },
+    56: { ico: '🌧️', label: 'Ледяная морось' },
+    57: { ico: '🌧️', label: 'Ледяная морось' },
+    61: { ico: '🌧️', label: 'Небольшой дождь' },
+    63: { ico: '🌧️', label: 'Дождь' },
+    65: { ico: '🌧️', label: 'Сильный дождь' },
+    66: { ico: '🌧️', label: 'Ледяной дождь' },
+    67: { ico: '🌧️', label: 'Ледяной дождь' },
+    71: { ico: '🌨️', label: 'Небольшой снег' },
+    73: { ico: '🌨️', label: 'Снег' },
+    75: { ico: '❄️', label: 'Сильный снегопад' },
+    77: { ico: '🌨️', label: 'Снежные зёрна' },
+    80: { ico: '🌦️', label: 'Ливень' },
+    81: { ico: '🌧️', label: 'Ливень' },
+    82: { ico: '⛈️', label: 'Сильный ливень' },
+    85: { ico: '🌨️', label: 'Снегопад' },
+    86: { ico: '🌨️', label: 'Сильный снегопад' },
+    95: { ico: '⛈️', label: 'Гроза' },
+    96: { ico: '⛈️', label: 'Гроза с градом' },
+    99: { ico: '⛈️', label: 'Гроза с градом' }
+  };
+
+  const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  const MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+
+  let weatherData = null;
+
+  function wmoInfo(code) {
+    return WMO[code] || { ico: '🌥️', label: 'Облачно' };
+  }
+
+  function isWinter(month) {
+    return month === 11 || month === 0 || month === 1;
+  }
+
+  // Формирует список предупреждений на день
+  function buildWarnings(i) {
+    const daily = weatherData.daily;
+    const d = new Date(daily.time[i] + 'T00:00:00');
+    const code = daily.weathercode[i];
+    const rain = daily.precipitation_sum[i] || 0;
+    const wind = daily.wind_speed_10m_max[i] || 0;
+    const tMax = daily.temperature_2m_max[i];
+    const tMin = daily.temperature_2m_min[i];
+    const winter = isWinter(d.getMonth());
+    const warns = [];
+
+    // Ураган / гроза / сильный ветер
+    if (code === 95 || code === 96 || code === 99) {
+      warns.push({ text: '⛈ Гроза, возможен ураган', severe: true });
+    } else if (wind >= 100) {
+      warns.push({ text: '💨 Ураганный ветер ' + Math.round(wind) + ' км/ч', severe: true });
+    } else if (wind >= 60) {
+      warns.push({ text: '💨 Шквалистый ветер ' + Math.round(wind) + ' км/ч', severe: false });
+    }
+
+    // Снег
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
+      warns.push({ text: '🌨 Возможен снег', severe: false });
+    }
+
+    // Дождь
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+      warns.push({ text: '🌧 Возможен дождь', severe: false });
+    } else if (rain >= 1) {
+      warns.push({ text: '🌧 Осадки до ' + Math.round(rain) + ' мм', severe: false });
+    }
+
+    // Зима: гололедица на дорогах
+    if (winter) {
+      const aboutWater = (tMin >= -5 && tMin <= 2) || (tMax >= -5 && tMax <= 2);
+      const thereIsPrecip = rain >= 0.5 || (code >= 56 && code <= 67) || (code >= 71 && code <= 77);
+      if (code === 66 || code === 67) {
+        warns.push({ text: '🧊 Гололедица на дорогах — ледяной дождь', severe: true });
+      } else if (thereIsPrecip && aboutWater) {
+        warns.push({ text: '🧊 Гололедица на дорогах', severe: true });
+      }
+    }
+
+    // Туман
+    if (code === 48) {
+      warns.push({ text: '🌫 Сильный туман, видимость снижена', severe: false });
+    } else if (code === 45) {
+      warns.push({ text: '🌫 Туман', severe: false });
+    }
+
+    return warns;
+  }
+
+  function fetchWeather() {
+    const url = 'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=' + WEATHER_LAT + '&longitude=' + WEATHER_LON +
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max' +
+      '&forecast_days=3&timezone=auto';
+
+    fetch(url)
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        weatherData = data;
+        renderWeather();
+      })
+      .catch(function () {
+        $('weatherGrid').innerHTML = '<div class="weather-loading">Не удалось получить прогноз погоды.</div>';
+      });
+  }
+
+  function tempStr(v) {
+    const t = Math.round(v);
+    return (t >= 0 ? '+' : '') + t + '°';
+  }
+
+  function renderWeather() {
+    const daily = weatherData.daily;
+    const html = daily.time.map(function (date, i) {
+      const d = new Date(date + 'T00:00:00');
+      const info = wmoInfo(daily.weathercode[i]);
+      const wind = Math.round(daily.wind_speed_10m_max[i]);
+      const rain = Math.round(daily.precipitation_sum[i]);
+      const warns = buildWarnings(i).slice(0, 2);
+      const name = i === 0 ? 'Сегодня' : (i === 1 ? 'Завтра' : WD[d.getDay()]);
+      const dateStr = d.getDate() + ' ' + MONTHS[d.getMonth()];
+      const warnHtml = warns.length
+        ? '<div class="wd-line3 ' + (warns.some(function (w) { return w.severe; }) ? 'wd-warn severe' : 'wd-warn') + '">' +
+          warns.map(function (w) { return '⚠️ ' + w.text; }).join('<br>') + '</div>'
+        : '';
+      return '<div class="weather-day" onclick="showWeatherWarning(' + i + ')">' +
+        '<div class="wd-line1">' +
+          '<span class="wd-name">' + name + ' · ' + dateStr + '</span>' +
+          '<span class="wd-ico">' + info.ico + '</span>' +
+          '<span class="wd-temps"><span class="max">' + tempStr(daily.temperature_2m_max[i]) + '</span><span class="min">' + tempStr(daily.temperature_2m_min[i]) + '</span></span>' +
+        '</div>' +
+        '<div class="wd-line2"><span>💧 ' + rain + ' мм</span><span>💨 ' + wind + ' км/ч</span><span>' + info.label + '</span></div>' +
+        warnHtml +
+        '</div>';
+    }).join('');
+    $('weatherGrid').innerHTML = html;
+  }
+
+  function showWeatherWarning(i) {
+    if (!weatherData) return;
+    const warns = buildWarnings(i);
+    const name = i === 0 ? 'сегодня' : (i === 1 ? 'завтра' : WD[new Date(weatherData.daily.time[i] + 'T00:00:00').getDay()]);
+    if (!warns.length) {
+      showToast('🌤 На ' + name + ' особых предупреждений нет');
+      return;
+    }
+    showToast('⚠️ ' + name + ': ' + warns.map(function (w) { return w.text; }).join(' · '));
+  }
+
+  // Автоматический запуск голосового управления (согласие пользователя получено)
+  window.addEventListener('load', function () {
+    if (SpeechRec) {
+      setTimeout(startVoice, 400);
+    }
+  });
+
+  // Подгонка интерфейса под один экран: если содержимое выше окна — масштабируем
+  function fitToScreen() {
+    var html = document.documentElement;
+    var vh = window.innerHeight;
+    var fits = html.scrollHeight <= vh + 1;
+    if (fits) {
+      if (html.style.zoom) html.style.zoom = '';
+      return;
+    }
+    var scale = (vh - 2) / html.scrollHeight;
+    html.style.zoom = String(Math.max(0.6, Math.min(1, scale)));
+    if (html.scrollHeight > vh + 1 && scale >= 0.99) {
+      html.style.zoom = String((vh - 2) / html.scrollHeight);
+    }
+  }
+  window.addEventListener('load', fitToScreen);
+  window.addEventListener('resize', fitToScreen);
+
+  // --- PWA: установка приложения ---
+  let deferredInstall = null;
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredInstall = e;
+    const btn = $('installBtn');
+    btn.style.display = 'inline-flex';
+  });
+
+  window.addEventListener('appinstalled', function () {
+    const btn = $('installBtn');
+    btn.style.display = 'none';
+    deferredInstall = null;
+    showToast('✅ Приложение установлено');
+  });
+
+  function installPwa() {
+    if (!deferredInstall) {
+      showToast('Установка доступна в меню браузера: «Установить приложение»');
+      return;
+    }
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(function (choice) {
+      if (choice.outcome === 'accepted') showToast('✅ Установка запущена');
+      else showToast('Установка отменена');
+      deferredInstall = null;
+      $('installBtn').style.display = 'none';
+    });
+  }
+
+  // Регистрация service worker (офлайн-кэш)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').then(function (reg) {
+        console.log('[PWA] Service worker зарегистрирован:', reg.scope);
+      }).catch(function (err) {
+        console.warn('[PWA] Ошибка регистрации SW:', err);
+      });
+    });
+  }
+
+  // Быстрые сценарии из ярлыков PWA: ?scene=morning / night / away
+  (function () {
+    try {
+      const p = new URLSearchParams(location.search);
+      const sc = p.get('scene');
+      if (sc && scenarios[sc]) runScenario(sc);
+    } catch (e) {}
+  })();
+
+  fetchWeather();
+</script>
+</body>
+</html>
