@@ -116,6 +116,21 @@
   .serial-btn.on { border-color: var(--green); color: var(--green); box-shadow: 0 0 14px rgba(126, 243, 176, 0.35); }
   .serial-status { font-size: 10px; color: var(--muted); max-width: 200px; text-align: right; }
   .serial-status.online { color: var(--green); }
+  .wifi-ip {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 6px 8px;
+    font-size: 12px;
+    width: 118px;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .wifi-ip:focus { border-color: var(--accent); }
+  .wifi-status { font-size: 10px; color: var(--muted); max-width: 200px; text-align: right; }
+  .wifi-status.online { color: var(--green); }
 
   /* --- Сетка (один экран, без прокрутки) --- */
   .layout {
@@ -318,6 +333,28 @@
   .wd-warn { color: var(--amber); }
   .wd-warn.severe { color: var(--red); }
   .weather-loading { text-align: center; color: var(--muted); font-size: 13px; padding: 12px 0; }
+  .wd-chevron { font-size: 10px; color: var(--muted); margin-left: 6px; transition: transform 0.2s; }
+  .weather-day.open .wd-chevron { transform: rotate(180deg); }
+  .weather-hours {
+    display: none;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.16);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .weather-day.open .weather-hours { display: grid; }
+  .wh-item {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 3px 2px;
+    text-align: center;
+    font-size: 11px;
+  }
+  .wh-item .wh-time { display: block; color: var(--muted); font-size: 10px; line-height: 1.2; }
+  .wh-item .wh-temp { display: block; font-weight: 600; margin-top: 1px; }
+  .wh-item.now { background: rgba(143, 210, 255, 0.22); border-color: rgba(143, 210, 255, 0.45); }
 
   /* --- Сценарии --- */
   .scenarios { grid-area: scenarios; padding: 12px 14px; }
@@ -591,8 +628,11 @@
     <div class="serial-actions">
       <button class="serial-btn" id="installBtn" onclick="installPwa()" style="display:none;"><span class="mat-icon filled">download</span><span>Установить</span></button>
       <button class="serial-btn" id="serialBtn" onclick="toggleSerial()"><span class="mat-icon filled">usb</span><span id="serialBtnText">Arduino</span></button>
+      <input class="wifi-ip" id="wifiIp" type="text" placeholder="IP модуля" value="192.168.4.1" spellcheck="false">
+      <button class="serial-btn" id="wifiBtn" onclick="toggleWifi()"><span class="mat-icon filled">wifi</span><span id="wifiBtnText">Wi-Fi</span></button>
     </div>
-    <span class="serial-status" id="serialStatus">не подключён</span>
+    <span class="serial-status" id="serialStatus">Arduino: не подключён</span>
+    <span class="wifi-status" id="wifiStatus">Wi-Fi: выкл</span>
   </div>
   <div class="clock" id="clock"></div>
 </header>
@@ -602,7 +642,7 @@
   <!-- Погода за окном -->
   <div class="card weather-card c-weather">
     <h2><span class="icon mat-icon filled">partly_cloudy_day</span> Погода за окном</h2>
-    <div class="weather-loc">Нижний Новгород · нажмите на день для предупреждений</div>
+    <div class="weather-loc">Нижний Новгород · нажмите на день — температура по часам (каждые 4 ч)</div>
     <div class="weather-grid" id="weatherGrid">
       <div class="weather-loading">Загружаем прогноз...</div>
     </div>
@@ -737,6 +777,8 @@
             🗣 Активация: скажите «дом» или нажмите на пиктограмму микрофона<br>
             🗣 Затем — «включи свет», «выключи подсветку»<br>
             🗣 Можно сразу: «дом, температура 24 градуса»<br>
+            🗣 Отопление: «увеличь на 2 градуса», «добавь 5 градусов»,<br>
+            🗣 «убавь на 3 градуса», «температура 26»<br>
             🗣 «Яркость 50 процентов», «увеличь яркость»<br>
             🗣 «Включи мотор», «шторы наполовину», «закрой шторы на 50 процентов»<br>
             🗣 «закрой шторы», «раздвинь шторы»<br>
@@ -1146,7 +1188,13 @@
       name: 'Я ушёл / Пока',
       run() {
         _main(false);
+        _led(false, 0);
         _temp(19);
+        _pump(false);
+        _ac(false);
+        _acMode('cool');
+        _acFan(1);
+        _curtains(100);
       }
     }
   };
@@ -1191,6 +1239,7 @@
   }
 
   function sendToSerial(cmd) {
+    if (wifiConnected) { wifiSend(cmd); return; }
     if (!arduinoWriter) return;
     try {
       const enc = new TextEncoder();
@@ -1199,7 +1248,7 @@
   }
 
   function syncAfter(delay) {
-    if (!arduinoConnected) return;
+    if (!arduinoConnected && !wifiConnected) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(sendAllState, delay == null ? 200 : delay);
   }
@@ -1284,6 +1333,94 @@
     sendToSerial('ACMODE=' + state.acMode);
     sendToSerial('ACFAN=' + state.acFan);
     sendToSerial('CUR=' + state.curtains);
+  }
+
+  // --- Связь по Wi-Fi (ESP8266 ESP-01, см. smart_home_wifi.ino) ---
+  let wifiIp = '192.168.4.1';
+  let wifiConnected = false;
+  let wifiPollTimer = null;
+
+  function parseWifiBody(text) {
+    const idx = text.indexOf('\r\n\r\n');
+    return idx >= 0 ? text.substring(idx + 4) : text;
+  }
+
+  function updateWifiUI() {
+    const btn = $('wifiBtn');
+    const txt = $('wifiBtnText');
+    const st = $('wifiStatus');
+    if (wifiConnected) {
+      btn.classList.add('on');
+      txt.textContent = 'Wi-Fi ✓';
+      st.textContent = 'Wi-Fi: ' + wifiIp;
+      st.classList.add('online');
+    } else {
+      btn.classList.remove('on');
+      txt.textContent = 'Wi-Fi';
+      st.textContent = 'Wi-Fi: выкл';
+      st.classList.remove('online');
+    }
+  }
+
+  function wifiSend(cmd) {
+    if (!wifiConnected) return;
+    fetch('http://' + wifiIp + '/cmd/' + encodeURIComponent(cmd))
+      .then(function (r) { return r.text(); })
+      .then(function (t) { handleArduinoStatus(parseWifiBody(t)); })
+      .catch(function () {});
+  }
+
+  function pollWifi() {
+    if (!wifiConnected) return;
+    fetch('http://' + wifiIp + '/status')
+      .then(function (r) { return r.text(); })
+      .then(function (t) {
+        const body = parseWifiBody(t);
+        if (body) handleArduinoStatus(body);
+      })
+      .catch(function () {});
+  }
+
+  function startWifiPoll() {
+    stopWifiPoll();
+    setTimeout(pollWifi, 80);
+    wifiPollTimer = setInterval(pollWifi, 2500);
+  }
+
+  function stopWifiPoll() {
+    if (wifiPollTimer) { clearInterval(wifiPollTimer); wifiPollTimer = null; }
+  }
+
+  async function toggleWifi() {
+    if (wifiConnected) {
+      wifiConnected = false;
+      stopWifiPoll();
+      updateWifiUI();
+      showToast('📡 Связь по Wi-Fi отключена');
+      return;
+    }
+    const host = (($('wifiIp').value || '') + '').trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+    if (!host) {
+      showToast('Введите IP-адрес модуля Wi-Fi (например, 192.168.4.1)');
+      return;
+    }
+    wifiIp = host;
+    try {
+      const res = await fetch('http://' + wifiIp + '/status');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const t = await res.text();
+      handleArduinoStatus(parseWifiBody(t));
+      wifiConnected = true;
+      updateWifiUI();
+      showToast('📡 Подключено к ' + wifiIp + ' по Wi-Fi');
+      sendAllState();
+      syncAfter(150);
+      startWifiPoll();
+    } catch (e) {
+      wifiConnected = false;
+      updateWifiUI();
+      showToast('Не удалось подключиться к ' + wifiIp + '. Проверьте адрес и питание Wi-Fi модуля.');
+    }
   }
 
   // --- Панель состояния ---
@@ -1553,9 +1690,13 @@
       // Температура / отопление
       if (includesAny(text, ['температур', 'градус', 'отоплен', 'тепло'])) {
         let v = NaN;
-        if (includesAny(text, ['увелич', 'выше'])) v = Math.min(30, state.temp + 1);
-        else if (includesAny(text, ['уменьш', 'ниже'])) v = Math.max(15, state.temp - 1);
-        else if (firstNum) v = firstNum;
+        const upWord = includesAny(text, ['увелич', 'выше', 'добав', 'прибав', 'подним', 'повыс', 'приплюс', 'плюс']);
+        const downWord = includesAny(text, ['уменьш', 'ниже', 'убав', 'сниз', 'опуст', 'пониз', 'минус']);
+        if (upWord && firstNum) v = state.temp + firstNum;       // «добавь на 3 градуса»
+        else if (downWord && firstNum) v = state.temp - firstNum; // «убавь на 2 градуса»
+        else if (upWord) v = state.temp + 1;
+        else if (downWord) v = state.temp - 1;
+        else if (firstNum) v = firstNum;                          // «температура 24 градуса»
         if (!isNaN(v)) {
           v = Math.max(15, Math.min(30, v));
           setTemp(v);
@@ -1739,6 +1880,7 @@
     const url = 'https://api.open-meteo.com/v1/forecast' +
       '?latitude=' + WEATHER_LAT + '&longitude=' + WEATHER_LON +
       '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max' +
+      '&hourly=temperature_2m' +
       '&forecast_days=3&timezone=auto';
 
     fetch(url)
@@ -1760,6 +1902,31 @@
     return (t >= 0 ? '+' : '') + t + '°';
   }
 
+  function pad2(n) {
+    return (n < 10 ? '0' : '') + n;
+  }
+
+  let openWeatherDay = -1;
+
+  // Почасовой блок для дня i: температура каждые 4 часа (00:00,04:00,08:00,...)
+  function buildHoursHtml(day) {
+    if (!weatherData.hourly) return '';
+    const time = weatherData.hourly.time;
+    const t2 = weatherData.hourly.temperature_2m;
+    const nowH = new Date().getHours();
+    let html = '<div class="weather-hours">';
+    for (let h = 0; h < 24; h += 4) {
+      const idx = day * 24 + h;
+      if (!time[idx] || t2[idx] == null) continue;
+      const isNow = (day === 0 && h === nowH);
+      html += '<div class="wh-item' + (isNow ? ' now' : '') + '">' +
+        '<span class="wh-time">' + pad2(h) + ':00</span>' +
+        '<span class="wh-temp">' + tempStr(t2[idx]) + '</span>' +
+        '</div>';
+    }
+    return html + '</div>';
+  }
+
   function renderWeather() {
     const daily = weatherData.daily;
     const html = daily.time.map(function (date, i) {
@@ -1774,28 +1941,33 @@
         ? '<div class="wd-line3 ' + (warns.some(function (w) { return w.severe; }) ? 'wd-warn severe' : 'wd-warn') + '">' +
           warns.map(function (w) { return '⚠️ ' + w.text; }).join('<br>') + '</div>'
         : '';
-      return '<div class="weather-day" onclick="showWeatherWarning(' + i + ')">' +
+      return '<div class="weather-day' + (openWeatherDay === i ? ' open' : '') + '" onclick="toggleWeatherHours(' + i + ')">' +
         '<div class="wd-line1">' +
           '<span class="wd-name">' + name + ' · ' + dateStr + '</span>' +
           '<span class="wd-ico">' + info.ico + '</span>' +
           '<span class="wd-temps"><span class="max">' + tempStr(daily.temperature_2m_max[i]) + '</span><span class="min">' + tempStr(daily.temperature_2m_min[i]) + '</span></span>' +
+          '<span class="wd-chevron">⌄</span>' +
         '</div>' +
         '<div class="wd-line2"><span>💧 ' + rain + ' мм</span><span>💨 ' + wind + ' км/ч</span><span>' + info.label + '</span></div>' +
         warnHtml +
+        buildHoursHtml(i) +
         '</div>';
     }).join('');
     $('weatherGrid').innerHTML = html;
   }
 
-  function showWeatherWarning(i) {
+  function toggleWeatherHours(i) {
     if (!weatherData) return;
+    openWeatherDay = (openWeatherDay === i) ? -1 : i;
+    renderWeather();
     const warns = buildWarnings(i);
     const name = i === 0 ? 'сегодня' : (i === 1 ? 'завтра' : WD[new Date(weatherData.daily.time[i] + 'T00:00:00').getDay()]);
-    if (!warns.length) {
-      showToast('🌤 На ' + name + ' особых предупреждений нет');
-      return;
+    if (openWeatherDay === i) {
+      if (warns.length) showToast('⚠️ ' + name + ': ' + warns.map(function (w) { return w.text; }).join(' · '));
+      else showToast('🌡 ' + name + ': температура по часам (каждые 4 часа). Нажмите ещё раз, чтобы закрыть');
+    } else {
+      showToast('🌡 Почасовой прогноз (' + name + ') закрыт');
     }
-    showToast('⚠️ ' + name + ': ' + warns.map(function (w) { return w.text; }).join(' · '));
   }
 
   // Автоматический запуск голосового управления (согласие пользователя получено)
