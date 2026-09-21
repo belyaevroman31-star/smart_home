@@ -553,6 +553,90 @@
   .voice-popup-heard { font-size: 16px; color: var(--text); margin-bottom: 4px; font-weight: 500; }
   .voice-popup-action { font-size: 13px; color: var(--green); }
 
+  /* --- Кнопки обучения и своих фраз --- */
+  .voice-tools { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .voice-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .voice-tool-btn:hover { background: rgba(255, 255, 255, 0.18); border-color: var(--accent); }
+  .voice-tool-btn .mat-icon { font-size: 17px; }
+
+  /* --- Режим обучения голосовых команд --- */
+  .train-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 8, 20, 0.72);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .train-overlay.open { display: flex; }
+  .train-panel {
+    width: min(560px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: linear-gradient(180deg, var(--bg2), var(--bg3));
+    border: 1px solid var(--stroke);
+    border-radius: 22px;
+    padding: 20px 22px 24px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    text-align: center;
+  }
+  .train-head { display: flex; align-items: center; gap: 8px; }
+  .train-head h2 { font-size: 16px; display: flex; align-items: center; gap: 8px; margin: 0; }
+  .train-progress { margin: 14px 0 4px; text-align: left; }
+  .train-progress span { font-size: 12px; color: var(--muted); }
+  .train-bar { height: 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); margin-top: 6px; overflow: hidden; }
+  .train-bar-fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 0.35s; }
+  .train-step { padding-top: 12px; }
+  .train-group { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+  .train-title { font-size: 19px; font-weight: 600; margin: 4px 0 10px; }
+  .train-say { font-size: 13px; color: var(--muted); }
+  .train-phrase {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 6px 0 14px;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .train-status { min-height: 42px; font-size: 14px; color: var(--muted); margin: 10px 0 4px; white-space: pre-line; }
+  .train-status.ok { color: var(--green); }
+  .train-status.bad { color: #ff8ba0; }
+  .train-mic { margin: 4px auto 8px; display: block; }
+  .train-actions { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+  .train-result { text-align: left; padding-top: 8px; }
+  .train-score { font-size: 17px; text-align: center; margin-bottom: 12px; }
+  .train-fail-list { margin: 6px 0 14px; }
+  .train-fail-item { font-size: 13px; padding: 7px 10px; border-radius: 10px; background: rgba(255, 80, 110, 0.12); border: 1px solid rgba(255, 80, 110, 0.3); margin-bottom: 6px; }
+  .train-fail-item b { color: var(--text); }
+  .train-fail-item span { color: var(--muted); font-size: 12px; }
+
+  /* --- Свои голосовые фразы --- */
+  .vc-group-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin: 14px 0 6px; }
+  .vc-row { margin-bottom: 8px; }
+  .vc-row .vc-label { font-size: 13px; margin-bottom: 4px; }
+  .vc-row .vc-label .hint { color: var(--muted); font-size: 11px; }
+  .vc-inputline { display: flex; gap: 6px; }
+  .vc-input { flex: 1; width: auto; text-align: left; }
+  .vc-dictate.listening { background: radial-gradient(circle at 35% 30%, #ff5f7e, #e11d48); color: #fff; border-color: rgba(255, 200, 210, 0.7); }
+
   /* --- Тост --- */
   .toast {
     position: fixed;
@@ -982,13 +1066,18 @@
             🗣 «кондиционер в авто-режиме», «скорость вентилятора 50 процентов»<br>
             🗣 Автоматика: при снижении отопления кондиционер сам включится в «авто»,<br>
             🗣 при повышении (нужно отопление) — кондиционер выключится<br>
-            🗣 Сценарии: «привет, я дома», «вечер», «кино», «утро», «ночь», «я ушёл», «пока»
+            🗣 Сценарии: «привет, я дома», «вечер», «кино», «утро», «ночь», «я ушёл», «пока»<br>
+            🎓 «Режим обучения» — тренировка команд по плану, «Свои фразы» — собственные формулировки
           </div>
         </div>
         <div class="curtain-bar" onclick="toggleCurtain()">
           <span>🪟 Перечень голосовых команд</span>
           <span class="curtain-ico" id="curtainIco">⌄</span>
         </div>
+      </div>
+      <div class="voice-tools">
+        <button class="voice-tool-btn" onclick="openVoiceTrain()"><span class="mat-icon filled">school</span> Режим обучения</button>
+        <button class="voice-tool-btn" onclick="openVoiceCustomize()"><span class="mat-icon filled">edit_note</span> Свои фразы</button>
       </div>
     </div>
   </div>
@@ -1151,6 +1240,48 @@
         <input class="settings-input" type="text" id="nameCurtains" onchange="applyDeviceNames()">
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Режим обучения голосовых команд -->
+<div class="train-overlay" id="trainOverlay">
+  <div class="train-panel">
+    <div class="train-head">
+      <h2><span class="mat-icon filled">school</span> Режим обучения</h2>
+      <button class="settings-close" onclick="closeVoiceTrain()">✕</button>
+    </div>
+
+    <div id="trainStepWrap">
+      <div class="train-progress">
+        <span id="trainCount">Шаг 1 из 1</span>
+        <div class="train-bar"><div class="train-bar-fill" id="trainBarFill"></div></div>
+      </div>
+      <div class="train-step">
+        <div class="train-group" id="trainGroup"></div>
+        <div class="train-title" id="trainTitle"></div>
+        <div class="train-say">Скажите:</div>
+        <div class="train-phrase" id="trainPhrase"></div>
+        <div class="train-status" id="trainStatus">Нажмите микрофон и произнесите фразу</div>
+        <button class="mic-btn train-mic" id="trainMic" onclick="trainListen()"><span class="mat-icon filled">mic</span></button>
+        <div class="train-actions">
+          <button class="settings-btn-sm" onclick="trainSkip()">Пропустить</button>
+          <button class="settings-btn-sm" id="trainNextBtn" style="display:none;" onclick="trainNext()">Далее →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="train-result" id="trainResult" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- Свои голосовые фразы -->
+<div class="settings-overlay" id="voiceCustomOverlay" onclick="if (event.target === this) closeVoiceCustomize()">
+  <div class="settings-panel">
+    <h2><span class="mat-icon filled">edit_note</span> Свои голосовые команды
+      <button class="settings-close" onclick="closeVoiceCustomize()">✕</button>
+    </h2>
+    <div class="sub">Для каждого действия задайте свои фразы через запятую. Нажмите 🎤, чтобы надиктовать фразу. Пусто — используются стандартные команды.</div>
+    <div id="voiceCustomList"></div>
   </div>
 </div>
 
@@ -2252,9 +2383,282 @@
     return found ? total : NaN;
   }
 
+  // ================= Режим обучения голосовых команд =================
+  // «Заложенный план» — эталонный перечень команд: по нему идёт и
+  // тренировка, и назначение собственных формулировок.
+
+  const voiceUpWords = ['увелич', 'выше', 'добав', 'прибав', 'подним', 'повыс', 'приплюс', 'плюс', 'горяч', 'жарче', 'теплее'];
+  const voiceDownWords = ['уменьш', 'ниже', 'убав', 'сниз', 'опуст', 'пониз', 'минус', 'холодн', 'холоднее'];
+
+  function isTempCtx(t) {
+    return includesAny(t, ['температур', 'градус', 'отоплен', 'отопл', 'тепл', 'жар', 'нагре', 'обогре', 'горяч', 'холодн', 'мороз', 'подмороз']);
+  }
+  function isUpWord(t) { return includesAny(t, voiceUpWords); }
+  function isDownWord(t) { return includesAny(t, voiceDownWords); }
+  function isAcCtx(t) { return includesAny(t, ['кондиционер', 'кондей', 'кондер']); }
+  function isCurtainCtx(t) { return includesAny(t, ['штор', 'занавес', 'затемни']); }
+  function hasNumber(t) { return /\d/.test(t) || !isNaN(numFromWords(t)); }
+  function spokenNumber(t) {
+    const m = t.match(/\d{1,3}/);
+    if (m) return parseInt(m[0], 10);
+    const w = numFromWords(t);
+    return isNaN(w) ? null : Math.round(w);
+  }
+  function clampNum(v, min, max) { return Math.max(min, Math.min(max, Math.round(v))); }
+  function containsPhrase(text, ph) {
+    if (!ph) return false;
+    const idx = text.indexOf(ph);
+    if (idx === -1) return false;
+    const before = idx === 0 ? ' ' : text[idx - 1];
+    const after = idx + ph.length >= text.length ? ' ' : text[idx + ph.length];
+    return (before === ' ' || before === '-') && (after === ' ' || after === '-');
+  }
+
+  function pHeatOn(t) { return includesAny(t, ['включи отоплен', 'запусти отоплен', 'включи нагрев', 'запусти нагрев', 'включи обогрев', 'обогрей', 'нагрей', 'сделай теплее', 'стало холодно', 'становится холодно', 'холодно дом', 'холодно в']); }
+  function pHeatOff(t) { return includesAny(t, ['выключи отоплен', 'останови отоплен', 'выключи нагрев', 'останови нагрев', 'выключи обогрев', 'останови обогрев', 'хватит греть', 'прекрати отоплен']); }
+  function pAcBlock(t) { return isAcCtx(t) || includesAny(t, ['охлажд', 'осушен']); }
+  function pAcMode(t) {
+    if (includesAny(t, ['охлажд', 'холод'])) return 'cool';
+    if (includesAny(t, ['обогрев', 'горяч', 'нагрев'])) return 'heat';
+    if (includesAny(t, ['осушен', 'суш'])) return 'dry';
+    if (isAcCtx(t) && includesAny(t, ['авто', 'автомат'])) return 'auto';
+    return '';
+  }
+  function pCurtainHalf(t) { return isCurtainCtx(t) && includesAny(t, ['половину', 'половина', 'половины', 'наполовину', 'в половину', 'пол штора', '50 проц', 'пятьдесят', '50%', '5 проц']); }
+  function pCurtainOpen(t) { return isCurtainCtx(t) && !hasNumber(t) && !pCurtainHalf(t) && includesAny(t, ['раздвинь', 'открой', 'открывай', 'открыть', 'подними штор']); }
+  function pCurtainClose(t) { return isCurtainCtx(t) && !hasNumber(t) && !pCurtainHalf(t) && includesAny(t, ['задвинь', 'закрой', 'закрывай', 'закрыть']); }
+
+  function acLabel(mode, n) {
+    const base = 'Кондиционер: ' + AC_MODES[mode].label.replace(/^..? /, '');
+    return (n === null || n === undefined || isNaN(n)) ? base : base + ' ' + n + ' °C';
+  }
+
+  const VOICE_PLAN = [
+    // --- Сценарии ---
+    { id: 'scene_home', group: 'Сценарии', title: 'Сценарий «Привет, я дома»', example: 'привет, я дома',
+      test: function (t) { return includesAny(t, ['привет я дома', 'привет я дом', 'я дома', 'привет', 'дома']); },
+      run: function () { runScenario('home'); return 'Сценарий: «' + scenarios.home.name + '»'; } },
+    { id: 'scene_evening', group: 'Сценарии', title: 'Сценарий «Вечер»', example: 'наступил вечер',
+      test: function (t) { return includesAny(t, ['вечер']); },
+      run: function () { runScenario('evening'); return 'Сценарий: «' + scenarios.evening.name + '»'; } },
+    { id: 'scene_cinema', group: 'Сценарии', title: 'Сценарий «Кино»', example: 'кино',
+      test: function (t) { return includesAny(t, ['кино', 'фильм']); },
+      run: function () { runScenario('cinema'); return 'Сценарий: «' + scenarios.cinema.name + '»'; } },
+    { id: 'scene_morning', group: 'Сценарии', title: 'Сценарий «Утро»', example: 'доброе утро',
+      test: function (t) { return includesAny(t, ['утро']); },
+      run: function () { runScenario('morning'); return 'Сценарий: «' + scenarios.morning.name + '»'; } },
+    { id: 'scene_night', group: 'Сценарии', title: 'Сценарий «Ночь»', example: 'спокойной ночи',
+      test: function (t) { return includesAny(t, ['ночь', 'спать', 'спокойной ночи']); },
+      run: function () { runScenario('night'); return 'Сценарий: «' + scenarios.night.name + '»'; } },
+    { id: 'scene_away', group: 'Сценарии', title: 'Сценарий «Я ушёл»', example: 'я ушёл',
+      test: function (t) { return includesAny(t, ['я ушел', 'я ушол', 'я ушла', 'пока', 'до свидания', 'ухожу', 'вышел']); },
+      run: function () { runScenario('away'); return 'Сценарий: «' + scenarios.away.name + '»'; } },
+
+    // --- Свет ---
+    { id: 'light_on', group: 'Свет', title: 'Включить свет', example: 'включи свет',
+      test: function (t) { return includesAny(t, ['включи свет', 'зажги свет', 'свет включай']); },
+      run: function () { toggleMainLight(true); return 'Основное освещение включено'; } },
+    { id: 'light_off', group: 'Свет', title: 'Выключить свет', example: 'выключи свет',
+      test: function (t) { return includesAny(t, ['выключи свет', 'погаси свет', 'свет выключи', 'отключи свет']); },
+      run: function () { toggleMainLight(false); return 'Основное освещение выключено'; } },
+
+    // --- Подсветка ---
+    { id: 'led_on', group: 'Подсветка', title: 'Включить подсветку', example: 'включи подсветку',
+      test: function (t) { return includesAny(t, ['включи подсвет', 'включи подсв', 'подсветку включи']); },
+      run: function () { toggleLed(true); return 'Подсветка включена'; } },
+    { id: 'led_off', group: 'Подсветка', title: 'Выключить подсветку', example: 'выключи подсветку',
+      test: function (t) { return includesAny(t, ['выключи подсвет', 'отключи подсвет']); },
+      run: function () { toggleLed(false); return 'Подсветка выключена'; } },
+    { id: 'led_brightness', group: 'Подсветка', title: 'Яркость подсветки', example: 'яркость 50 процентов', param: { min: 0, max: 100, unit: '%' },
+      test: function (t) { return includesAny(t, ['яркост', 'яркость']); },
+      run: function (n, t) {
+        let v = (n === null || n === undefined || isNaN(n)) ? NaN : n;
+        if (isNaN(v)) {
+          if (includesAny(t, ['увелич', 'выше', 'больше'])) v = Math.min(100, state.ledBrightness + 10);
+          else if (includesAny(t, ['уменьш', 'ниже', 'меньше'])) v = Math.max(0, state.ledBrightness - 10);
+          else if (includesAny(t, ['максима', 'макс'])) v = 100;
+          else if (includesAny(t, ['миниму', 'мин'])) v = 0;
+        }
+        if (isNaN(v)) return '';
+        v = clampNum(v, 0, 100);
+        toggleLed(true);
+        setLedBrightness(v);
+        return 'Яркость подсветки: ' + v + '%';
+      } },
+
+    // --- Отопление ---
+    { id: 'heat_on', group: 'Отопление', title: 'Включить отопление', example: 'включи отопление',
+      test: pHeatOn,
+      run: function () {
+        state.temp = Math.max(state.temp, 24);
+        $('tempSlider').value = state.temp;
+        $('tempValue').textContent = state.temp;
+        setTemp(state.temp);
+        togglePump(true);
+        return 'Отопление включено: ' + state.temp + ' °C, насос запущен';
+      } },
+    { id: 'heat_off', group: 'Отопление', title: 'Выключить отопление', example: 'выключи отопление',
+      test: pHeatOff,
+      run: function () { togglePump(false); return 'Отопление выключено, насос остановлен'; } },
+    { id: 'temp_set', group: 'Отопление', title: 'Задать температуру', example: 'поставь температуру 24 градуса', param: { min: 15, max: 30, unit: '°C' }, needsNum: true,
+      test: function (t) { return isTempCtx(t) && hasNumber(t) && !isUpWord(t) && !isDownWord(t) && !pHeatOn(t) && !pHeatOff(t) && !isAcCtx(t); },
+      run: function (n) {
+        const v = clampNum(n, 15, 30);
+        setTemp(v);
+        return 'Отопление: ' + v + ' °C';
+      } },
+    { id: 'temp_up', group: 'Отопление', title: 'Повысить температуру', example: 'увеличь температуру на 2 градуса',
+      test: function (t) { return isTempCtx(t) && isUpWord(t) && !pHeatOn(t) && !pHeatOff(t) && !isAcCtx(t); },
+      run: function (n) {
+        const v = clampNum(state.temp + (n === null || isNaN(n) ? 1 : n), 15, 30);
+        setTemp(v);
+        togglePump(true);
+        return 'Отопление: ' + v + ' °C, насос запущен';
+      } },
+    { id: 'temp_down', group: 'Отопление', title: 'Понизить температуру', example: 'убавь температуру на 2 градуса',
+      test: function (t) { return isTempCtx(t) && isDownWord(t) && !pHeatOn(t) && !pHeatOff(t) && !isAcCtx(t); },
+      run: function (n) {
+        const v = clampNum(state.temp - (n === null || isNaN(n) ? 1 : n), 15, 30);
+        setTemp(v);
+        togglePump(false);
+        return 'Отопление: ' + v + ' °C, насос остановлен';
+      } },
+
+    // --- Мотор ---
+    { id: 'pump_on', group: 'Мотор', title: 'Включить мотор', example: 'включи мотор',
+      test: function (t) { return includesAny(t, ['включи мотор', 'запусти мотор', 'включи насос', 'запусти насос']); },
+      run: function () { togglePump(true); return 'Мотор рециркуляции запущен'; } },
+    { id: 'pump_off', group: 'Мотор', title: 'Выключить мотор', example: 'выключи мотор',
+      test: function (t) { return includesAny(t, ['выключи мотор', 'останови мотор', 'выключи насос', 'останови насос']); },
+      run: function () { togglePump(false); return 'Мотор рециркуляции остановлен'; } },
+
+    // --- Шторы ---
+    { id: 'curtains_open', group: 'Шторы', title: 'Открыть шторы', example: 'раздвинь шторы',
+      test: pCurtainOpen,
+      run: function () { setCurtains(0); return 'Шторы: Открыты'; } },
+    { id: 'curtains_close', group: 'Шторы', title: 'Закрыть шторы', example: 'закрой шторы',
+      test: pCurtainClose,
+      run: function () { setCurtains(100); return 'Шторы: Закрыты'; } },
+    { id: 'curtains_half', group: 'Шторы', title: 'Шторы наполовину', example: 'шторы наполовину',
+      test: pCurtainHalf,
+      run: function () { setCurtains(50); return 'Шторы: ' + curtainsLabel(50); } },
+    { id: 'curtains_set', group: 'Шторы', title: 'Шторы на процент', example: 'закрой шторы на 30 процентов', param: { min: 0, max: 100, unit: '%' }, needsNum: true,
+      test: function (t) { return isCurtainCtx(t) && hasNumber(t) && !pCurtainHalf(t); },
+      run: function (n) { const v = clampNum(n, 0, 100); setCurtains(v); return 'Шторы: ' + curtainsLabel(v); } },
+
+    // --- Кондиционер ---
+    { id: 'ac_on', group: 'Кондиционер', title: 'Включить кондиционер', example: 'включи кондиционер',
+      test: function (t) { return isAcCtx(t) && !pAcMode(t) && includesAny(t, ['включи', 'включ', 'запусти', 'запуск']) && !isUpWord(t) && !isDownWord(t); },
+      run: function () { toggleAc(true); return 'Кондиционер включён (' + state.acTemp + ' °C)'; } },
+    { id: 'ac_off', group: 'Кондиционер', title: 'Выключить кондиционер', example: 'выключи кондиционер',
+      test: function (t) { return isAcCtx(t) && !pAcMode(t) && includesAny(t, ['выключи', 'выключ', 'отключи', 'стоп', 'останови']); },
+      run: function () { toggleAc(false); return 'Кондиционер выключен'; } },
+    { id: 'ac_cool', group: 'Кондиционер', title: 'Режим охлаждения', example: 'включи охлаждение 18 градусов',
+      test: function (t) { return pAcBlock(t) && pAcMode(t) === 'cool'; },
+      run: function (n) {
+        toggleAc(true); setAcMode('cool');
+        const v = (n === null || isNaN(n)) ? null : clampNum(n, 16, 30);
+        if (v !== null) setAcTemp(v);
+        return acLabel('cool', v);
+      } },
+    { id: 'ac_heat', group: 'Кондиционер', title: 'Режим обогрева', example: 'кондиционер обогрев',
+      test: function (t) { return isAcCtx(t) && pAcMode(t) === 'heat'; },
+      run: function (n) {
+        toggleAc(true); setAcMode('heat');
+        const v = (n === null || isNaN(n)) ? null : clampNum(n, 16, 30);
+        if (v !== null) setAcTemp(v);
+        return acLabel('heat', v);
+      } },
+    { id: 'ac_dry', group: 'Кондиционер', title: 'Режим осушения', example: 'осушение',
+      test: function (t) { return pAcBlock(t) && pAcMode(t) === 'dry'; },
+      run: function (n) {
+        toggleAc(true); setAcMode('dry');
+        const v = (n === null || isNaN(n)) ? null : clampNum(n, 16, 30);
+        if (v !== null) setAcTemp(v);
+        return acLabel('dry', v);
+      } },
+    { id: 'ac_auto', group: 'Кондиционер', title: 'Авто-режим', example: 'кондиционер в авто-режиме',
+      test: function (t) { return isAcCtx(t) && pAcMode(t) === 'auto'; },
+      run: function (n) {
+        toggleAc(true); setAcMode('auto');
+        const v = (n === null || isNaN(n)) ? null : clampNum(n, 16, 30);
+        if (v !== null) setAcTemp(v);
+        return acLabel('auto', v);
+      } },
+    { id: 'ac_temp_set', group: 'Кондиционер', title: 'Температура кондиционера', example: 'поставь температуру кондиционера 24 градуса', param: { min: 16, max: 30, unit: '°C' }, needsNum: true,
+      test: function (t) { return isAcCtx(t) && !pAcMode(t) && hasNumber(t) && !isUpWord(t) && !isDownWord(t) && !includesAny(t, ['включи', 'включ', 'запусти']) && !includesAny(t, ['выключи', 'выключ', 'отключи']); },
+      run: function (n) { const v = clampNum(n, 16, 30); toggleAc(true); setAcTemp(v); return 'Кондиционер: ' + v + ' °C'; } },
+    { id: 'ac_temp_up', group: 'Кондиционер', title: 'Повысить температуру кондиционера', example: 'добавь температуру кондиционера на 2 градуса',
+      test: function (t) { return isAcCtx(t) && !pAcMode(t) && isUpWord(t) && !includesAny(t, ['включи', 'включ', 'запусти', 'выключи', 'выключ']); },
+      run: function (n) { const v = clampNum(state.acTemp + (n === null || isNaN(n) ? 1 : n), 16, 30); toggleAc(true); setAcTemp(v); return 'Кондиционер: ' + v + ' °C'; } },
+    { id: 'ac_temp_down', group: 'Кондиционер', title: 'Понизить температуру кондиционера', example: 'убавь температуру кондиционера на 2 градуса',
+      test: function (t) { return isAcCtx(t) && !pAcMode(t) && isDownWord(t) && !includesAny(t, ['включи', 'включ', 'запусти', 'выключи', 'выключ']); },
+      run: function (n) { const v = clampNum(state.acTemp - (n === null || isNaN(n) ? 1 : n), 16, 30); toggleAc(true); setAcTemp(v); return 'Кондиционер: ' + v + ' °C'; } },
+
+    // --- Вентилятор ---
+    { id: 'fan_set', group: 'Вентилятор', title: 'Скорость вентилятора', example: 'скорость вентилятора 50 процентов', param: { min: 0, max: 100, unit: '%' },
+      test: function (t) { return includesAny(t, ['вентилятор', 'скорость', 'обдув']) && !isAcCtx(t); },
+      run: function (n, t) {
+        let f = (n === null || n === undefined || isNaN(n)) ? NaN : n;
+        if (isNaN(f)) {
+          if (includesAny(t, ['высок', 'максим', 'больше', 'сильн', 'более'])) f = 100;
+          else if (includesAny(t, ['средн', 'середина', 'средне'])) f = 50;
+          else if (includesAny(t, ['низк', 'минимальн', 'меньше', 'тише', 'слаб'])) f = 25;
+        }
+        if (isNaN(f)) return '';
+        f = clampNum(f, 0, 100);
+        toggleAc(true);
+        setAcFan(f);
+        return 'Вентилятор кондиционера: ' + f + '%';
+      } }
+  ];
+
+  // --- Свои (обученные) фразы ---
+  let customVoicePhrases = {};
+  function loadCustomVoicePhrases() {
+    try { customVoicePhrases = JSON.parse(storeGet('voicePhrases', '{}')) || {}; } catch (e) { customVoicePhrases = {}; }
+  }
+  function saveCustomVoicePhrases() { storeSet('voicePhrases', JSON.stringify(customVoicePhrases)); }
+  function getCustomPhrases(id) {
+    const raw = customVoicePhrases[id];
+    if (!raw) return [];
+    return String(raw).split(',').map(function (s) { return norm(s); }).filter(Boolean);
+  }
+  function matchCustomVoice(text) {
+    for (let i = 0; i < VOICE_PLAN.length; i++) {
+      const e = VOICE_PLAN[i];
+      const phrases = getCustomPhrases(e.id);
+      for (let j = 0; j < phrases.length; j++) {
+        if (containsPhrase(text, phrases[j])) {
+          const num = spokenNumber(text);
+          if (e.needsNum && num === null) continue;
+          return { entry: e, num: num };
+        }
+      }
+    }
+    return null;
+  }
+  function voiceEntryMatches(text, e) {
+    const phrases = getCustomPhrases(e.id);
+    for (let j = 0; j < phrases.length; j++) {
+      if (containsPhrase(text, phrases[j])) {
+        if (e.needsNum && spokenNumber(text) === null) continue;
+        return true;
+      }
+    }
+    return e.test ? e.test(text) : false;
+  }
+
   function processVoiceCommand(raw) {
     const text = norm(raw);
     let action = '';
+
+    // Обученные (пользовательские) фразы имеют приоритет над стандартными
+    const custom = matchCustomVoice(text);
+    if (custom) {
+      const label = custom.entry.run(custom.num, text);
+      if (label) return label;
+    }
 
     // Сценарии — проверяем первыми
     const scenarioMap = [
@@ -2494,6 +2898,244 @@
     }
   }
 
+  // --- Режим обучения: тренировка по заложенному плану ---
+  let trainQueue = [];
+  let trainPos = 0;
+  let trainResults = {};
+  let trainRec = null;
+  let trainBusy = false;
+
+  function planIndexById(id) {
+    for (let i = 0; i < VOICE_PLAN.length; i++) if (VOICE_PLAN[i].id === id) return i;
+    return -1;
+  }
+
+  function openVoiceTrain() {
+    if (!voiceSupported()) return;
+    closeVoiceCustomize();
+    if (voiceListening) stopVoice();
+    trainQueue = VOICE_PLAN.map(function (_, i) { return i; });
+    trainResults = {};
+    trainPos = 0;
+    $('trainResult').style.display = 'none';
+    $('trainStepWrap').style.display = 'block';
+    $('trainOverlay').classList.add('open');
+    renderTrainStep();
+  }
+
+  function closeVoiceTrain() {
+    stopTrainRec();
+    $('trainOverlay').classList.remove('open');
+  }
+
+  function stopTrainRec() {
+    if (trainRec) {
+      try { trainRec.stop(); } catch (e) {}
+      trainRec = null;
+    }
+    trainBusy = false;
+    const m = $('trainMic');
+    if (m) m.classList.remove('listening');
+  }
+
+  function renderTrainStep() {
+    if (trainPos >= trainQueue.length) { renderTrainResult(); return; }
+    const e = VOICE_PLAN[trainQueue[trainPos]];
+    $('trainGroup').textContent = e.group;
+    $('trainTitle').textContent = e.title;
+    const custom = getCustomPhrases(e.id);
+    $('trainPhrase').textContent = custom.length ? custom[0] : e.example;
+    const st = $('trainStatus');
+    st.className = 'train-status';
+    st.textContent = 'Нажмите микрофон и произнесите фразу';
+    $('trainNextBtn').style.display = 'none';
+    $('trainMic').style.display = '';
+    $('trainCount').textContent = 'Шаг ' + (trainPos + 1) + ' из ' + trainQueue.length;
+    $('trainBarFill').style.width = Math.round((trainPos / trainQueue.length) * 100) + '%';
+  }
+
+  function trainListen() {
+    if (!voiceSupported()) return;
+    if (trainBusy) return;
+    stopTrainRec();
+    trainBusy = true;
+    $('trainMic').classList.add('listening');
+    const st = $('trainStatus');
+    st.className = 'train-status';
+    st.textContent = '🎤 Слушаю...';
+    trainRec = new SpeechRec();
+    trainRec.lang = 'ru-RU';
+    trainRec.continuous = false;
+    trainRec.interimResults = false;
+    trainRec.maxAlternatives = 1;
+    trainRec.onresult = function (event) {
+      trainEvaluate(norm(event.results[0][0].transcript || ''));
+    };
+    trainRec.onerror = function (event) {
+      trainBusy = false;
+      $('trainMic').classList.remove('listening');
+      if (event.error === 'no-speech') {
+        st.className = 'train-status';
+        st.textContent = 'Ничего не услышано. Попробуйте ещё раз.';
+      } else {
+        st.className = 'train-status bad';
+        st.textContent = 'Ошибка распознавания: ' + event.error;
+      }
+    };
+    trainRec.onend = function () {
+      trainBusy = false;
+      $('trainMic').classList.remove('listening');
+    };
+    try { trainRec.start(); } catch (e) { trainBusy = false; }
+  }
+
+  function trainEvaluate(text) {
+    const e = VOICE_PLAN[trainQueue[trainPos]];
+    const ok = voiceEntryMatches(text, e);
+    trainResults[e.id] = ok;
+    const st = $('trainStatus');
+    if (ok) {
+      let label = '';
+      try { label = e.run(spokenNumber(text), text) || ''; } catch (err) { label = ''; }
+      st.className = 'train-status ok';
+      st.textContent = '✅ «' + text + '» — распознано верно' + (label ? '\n' + label : '');
+    } else {
+      const expect = getCustomPhrases(e.id)[0] || e.example;
+      st.className = 'train-status bad';
+      st.textContent = '❌ Услышано «' + text + '»\nОжидалось: «' + expect + '»';
+    }
+    $('trainMic').style.display = 'none';
+    const next = $('trainNextBtn');
+    next.style.display = '';
+    next.textContent = (trainPos + 1 >= trainQueue.length) ? 'Итог →' : 'Далее →';
+  }
+
+  function trainSkip() {
+    const e = VOICE_PLAN[trainQueue[trainPos]];
+    trainResults[e.id] = false;
+    trainNext();
+  }
+
+  function trainNext() {
+    stopTrainRec();
+    trainPos++;
+    if (trainPos >= trainQueue.length) renderTrainResult();
+    else renderTrainStep();
+  }
+
+  function renderTrainResult() {
+    $('trainStepWrap').style.display = 'none';
+    $('trainResult').style.display = 'block';
+    let ok = 0;
+    const failed = [];
+    trainQueue.forEach(function (i) {
+      const e = VOICE_PLAN[i];
+      if (trainResults[e.id]) ok++;
+      else failed.push(e);
+    });
+    const total = trainQueue.length;
+    const pct = total ? Math.round((ok / total) * 100) : 0;
+    let html = '<div class="train-score">🎓 Результат: <b>' + ok + ' из ' + total + '</b> (' + pct + '%)</div>';
+    if (failed.length === 0) {
+      html += '<div class="sub" style="text-align:center;">Отлично! Все команды распознаны.</div>';
+    } else {
+      html += '<div class="sub">Не распознаны — повторите:</div><div class="train-fail-list">';
+      failed.forEach(function (e) {
+        const phrase = getCustomPhrases(e.id)[0] || e.example;
+        html += '<div class="train-fail-item"><b>' + e.title + '</b><br><span>Скажите: «' + phrase + '»</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '<div class="train-actions">';
+    if (failed.length) html += '<button class="settings-btn-sm" onclick="repeatTrainMistakes()">🔁 Повторить ошибки</button>';
+    html += '<button class="settings-btn-sm" onclick="openVoiceTrain()">↻ Всё заново</button>';
+    html += '<button class="settings-btn-sm" onclick="closeVoiceTrain()">Завершить</button></div>';
+    $('trainResult').innerHTML = html;
+  }
+
+  function repeatTrainMistakes() {
+    const failed = trainQueue.filter(function (i) { return !trainResults[VOICE_PLAN[i].id]; });
+    if (!failed.length) return;
+    failed.forEach(function (i) { delete trainResults[VOICE_PLAN[i].id]; });
+    trainQueue = failed;
+    trainPos = 0;
+    $('trainResult').style.display = 'none';
+    $('trainStepWrap').style.display = 'block';
+    renderTrainStep();
+  }
+
+  // --- Назначение своих голосовых фраз ---
+  function openVoiceCustomize() {
+    closeVoiceTrain();
+    renderVoiceCustomize();
+    $('voiceCustomOverlay').classList.add('open');
+  }
+  function closeVoiceCustomize() {
+    $('voiceCustomOverlay').classList.remove('open');
+  }
+  function escAttr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+  function renderVoiceCustomize() {
+    let html = '';
+    let lastGroup = '';
+    VOICE_PLAN.forEach(function (e) {
+      if (e.group !== lastGroup) {
+        html += '<div class="vc-group-title">' + e.group + '</div>';
+        lastGroup = e.group;
+      }
+      const val = customVoicePhrases[e.id] || '';
+      const param = e.param ? ' <span class="hint">(' + e.param.min + '–' + e.param.max + ' ' + e.param.unit + ')</span>' : '';
+      html += '<div class="vc-row">' +
+        '<div class="vc-label">' + e.title + param + '</div>' +
+        '<div class="vc-inputline">' +
+          '<input class="settings-input vc-input" data-id="' + e.id + '" value="' + escAttr(val) + '" placeholder="напр. «' + escAttr(e.example) + '»" onchange="saveVoicePhrase(this)">' +
+          '<button class="settings-btn-sm vc-dictate" data-id="' + e.id + '" onclick="dictateVoicePhrase(this)">🎤</button>' +
+        '</div>' +
+      '</div>';
+    });
+    $('voiceCustomList').innerHTML = html;
+  }
+  function saveVoicePhrase(input) {
+    const id = input.getAttribute('data-id');
+    const v = input.value.trim();
+    if (v) customVoicePhrases[id] = v;
+    else delete customVoicePhrases[id];
+    saveCustomVoicePhrases();
+    showToast(v ? '✅ Фраза сохранена' : '↩️ Фраза сброшена к стандартной');
+  }
+  function dictateVoicePhrase(btn) {
+    if (!voiceSupported()) return;
+    const id = btn.getAttribute('data-id');
+    if (planIndexById(id) < 0) return;
+    const old = btn.textContent;
+    btn.classList.add('listening');
+    btn.textContent = '…';
+    const rec = new SpeechRec();
+    rec.lang = 'ru-RU';
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = function (event) {
+      const text = norm(event.results[0][0].transcript || '');
+      const input = document.querySelector('.vc-input[data-id="' + id + '"]');
+      if (input) {
+        const parts = input.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        parts.push(text);
+        input.value = parts.join(', ');
+        saveVoicePhrase(input);
+      }
+    };
+    rec.onerror = function (event) {
+      if (event.error !== 'no-speech') showToast('⚠️ Ошибка распознавания: ' + event.error);
+    };
+    rec.onend = function () {
+      btn.classList.remove('listening');
+      btn.textContent = old;
+    };
+    try { rec.start(); } catch (err) { btn.classList.remove('listening'); btn.textContent = old; }
+  }
+
   // --- Погода за окном (Open-Meteo, бесплатно без ключа) ---
 
   const WEATHER_LAT = 56.363769;
@@ -2702,6 +3344,7 @@
   (function () {
     applyTheme(storeGet('theme', 'dark'));
     loadSchedule();
+    loadCustomVoicePhrases();
     updateDeviceTitles();
     applyDevAnims();
   })();
