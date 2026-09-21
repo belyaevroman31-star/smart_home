@@ -176,7 +176,7 @@
     background: var(--glass);
     border: 1px solid var(--stroke);
     border-radius: 22px;
-    padding: 16px 18px 14px;
+    padding: 12px 16px 11px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255,255,255,0.16);
     backdrop-filter: blur(22px) saturate(170%);
     -webkit-backdrop-filter: blur(22px) saturate(170%);
@@ -184,15 +184,17 @@
   }
   .card:hover { transform: translateY(-3px); background: var(--glass-strong); }
   .card h2 {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 9px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
   }
-  .card h2 .icon { font-size: 18px; }
+  .card h2 .icon { font-size: 24px; flex: 0 0 auto; }
 
   .c-weather   { grid-area: weather; }
   .c-light     { grid-area: light; }
@@ -223,13 +225,13 @@
     font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
     text-shadow: 0 0 14px rgba(143, 210, 255, 0.35);
   }
-  .card h2 .mat-icon { font-size: 20px; margin-right: 4px; }
+  .card h2 .mat-icon { font-size: 25px; margin-right: 3px; flex: 0 0 auto; }
   .header-ico { font-size: 26px; margin-right: 8px; }
-  .mic-btn .mat-icon { font-size: 28px; color: inherit; }
+  .mic-btn .mat-icon { font-size: 40px; color: inherit; }
   .scenario-btn .mat-icon {
-    font-size: 28px;
+    font-size: 30px;
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     color: var(--accent);
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
   }
@@ -239,11 +241,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 13px;
+    margin-bottom: 7px;
+    font-size: 15px;
     color: var(--text);
+    gap: 10px;
   }
-  .switch { position: relative; display: inline-block; width: 54px; height: 30px; }
+  .toggle-row > label:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toggle-row > .switch { flex: 0 0 auto; }
+  .switch { position: relative; display: inline-block; width: 48px; height: 27px; flex: 0 0 auto; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .slider {
     position: absolute;
@@ -258,8 +268,8 @@
   .slider:before {
     content: "";
     position: absolute;
-    height: 22px;
-    width: 22px;
+    height: 19px;
+    width: 19px;
     left: 3px;
     bottom: 3px;
     background: linear-gradient(160deg, #ffffff, #dbe4f2);
@@ -272,24 +282,25 @@
     border-color: transparent;
     box-shadow: 0 0 18px rgba(126, 243, 176, 0.45);
   }
-  .switch input:checked + .slider:before { transform: translateX(24px); }
+  .switch input:checked + .slider:before { transform: translateX(21px); }
 
   /* --- Ползунки --- */
-  .control-row { margin-bottom: 8px; }
+  .control-row { margin-bottom: 7px; }
   .control-row .label-row {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
-    margin-bottom: 8px;
+    margin-bottom: 7px;
+    align-items: baseline;
   }
-  .control-row .label-row b { color: var(--text); font-weight: 600; }
+  .control-row .label-row b { color: var(--text); font-weight: 700; font-size: 16px; }
   input[type=range] {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 6px;
-    border-radius: 6px;
+    height: 8px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.16);
     outline: none;
     cursor: pointer;
@@ -297,8 +308,8 @@
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #ffffff, #c8d6ef 70%);
     border: none;
@@ -307,19 +318,19 @@
   }
   input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
   input[type=range]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: #e6eefb;
     border: none;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
   }
-  input[type=range]::-moz-range-track { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.16); }
+  input[type=range]::-moz-range-track { height: 8px; border-radius: 8px; background: rgba(255,255,255,0.16); }
 
   .status-bulb {
     display: inline-block;
-    width: 8px;
-    height: 8px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.25);
     margin-right: 6px;
@@ -328,15 +339,15 @@
   .status-bulb.on { background: var(--green); box-shadow: 0 0 10px var(--green); }
 
   /* --- Погода (компактный виджет слева) --- */
-  .weather-card { padding: 14px 14px 12px; }
-  .weather-card h2 { font-size: 14px; margin-bottom: 8px; }
-  .weather-loc { font-size: 11px; color: var(--muted); margin: 0 0 8px; letter-spacing: 0.4px; }
-  .weather-grid { display: flex; flex-direction: column; gap: 7px; }
+  .weather-card { padding: 12px 13px 11px; }
+  .weather-card h2 { font-size: 16px; margin-bottom: 7px; }
+  .weather-loc { font-size: 12px; color: var(--muted); margin: 0 0 7px; letter-spacing: 0.3px; }
+  .weather-grid { display: flex; flex-direction: column; gap: 6px; }
   .weather-day {
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.13);
     border-radius: 12px;
-    padding: 7px 10px;
+    padding: 6px 9px;
     cursor: pointer;
     transition: background 0.2s, box-shadow 0.2s;
     backdrop-filter: blur(8px);
@@ -346,22 +357,22 @@
     background: rgba(255, 255, 255, 0.14);
     box-shadow: 0 0 0 1px rgba(143, 210, 255, 0.4);
   }
-  .wd-line1 { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
-  .wd-line1 .wd-name { font-weight: 600; }
-  .wd-line1 .wd-ico { font-size: 17px; margin: 0 6px; }
-  .wd-temps .max { color: var(--text); font-weight: 600; }
-  .wd-temps .min { color: var(--muted); margin-left: 6px; }
-  .wd-line2 { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .wd-line3 { font-size: 11px; font-weight: 500; margin-top: 3px; line-height: 1.35; }
+  .wd-line1 { display: flex; align-items: center; justify-content: space-between; font-size: 15px; }
+  .wd-line1 .wd-name { font-weight: 700; }
+  .wd-line1 .wd-ico { font-size: 22px; margin: 0 6px; }
+  .wd-temps .max { color: var(--text); font-weight: 700; font-size: 16px; }
+  .wd-temps .min { color: var(--muted); margin-left: 6px; font-size: 15px; }
+  .wd-line2 { font-size: 13px; color: var(--muted); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .wd-line3 { font-size: 13px; font-weight: 600; margin-top: 3px; line-height: 1.3; }
   .wd-warn { color: var(--amber); }
   .wd-warn.severe { color: var(--red); }
-  .weather-loading { text-align: center; color: var(--muted); font-size: 13px; padding: 12px 0; }
-  .wd-chevron { font-size: 10px; color: var(--muted); margin-left: 6px; transition: transform 0.2s; }
+  .weather-loading { text-align: center; color: var(--muted); font-size: 15px; padding: 10px 0; }
+  .wd-chevron { font-size: 12px; color: var(--muted); margin-left: 6px; transition: transform 0.2s; }
   .weather-day.open .wd-chevron { transform: rotate(180deg); }
   .weather-hours {
     display: none;
-    margin-top: 8px;
-    padding-top: 7px;
+    margin-top: 7px;
+    padding-top: 6px;
     border-top: 1px dashed rgba(255, 255, 255, 0.16);
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
@@ -373,14 +384,14 @@
     border-radius: 8px;
     padding: 3px 2px;
     text-align: center;
-    font-size: 11px;
+    font-size: 13px;
   }
-  .wh-item .wh-time { display: block; color: var(--muted); font-size: 10px; line-height: 1.2; }
-  .wh-item .wh-temp { display: block; font-weight: 600; margin-top: 1px; }
+  .wh-item .wh-time { display: block; color: var(--muted); font-size: 12px; line-height: 1.2; }
+  .wh-item .wh-temp { display: block; font-weight: 700; margin-top: 1px; }
   .wh-item.now { background: rgba(143, 210, 255, 0.22); border-color: rgba(143, 210, 255, 0.45); }
 
   /* --- Сценарии --- */
-  .scenarios { grid-area: scenarios; padding: 12px 14px; }
+  .scenarios { grid-area: scenarios; padding: 10px 14px; }
   .scenario-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -391,9 +402,10 @@
     border: 1px solid var(--stroke);
     color: var(--text);
     border-radius: 14px;
-    padding: 10px 8px;
+    padding: 7px 6px 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 600;
     transition: transform 0.2s ease, background 0.25s, box-shadow 0.25s;
     text-align: center;
     backdrop-filter: blur(14px) saturate(160%);
@@ -406,9 +418,9 @@
   }
   .scenario-btn:active { transform: translateY(0); }
   .scenario-btn .mat-icon {
-    font-size: 22px;
+    font-size: 32px;
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     color: var(--accent);
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
   }
@@ -419,9 +431,10 @@
     background: var(--glass);
     border: 1px solid var(--stroke);
     color: var(--text);
-    border-radius: 14px;
-    padding: 10px;
-    font-size: 13px;
+    border-radius: 12px;
+    padding: 8px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
     margin: 0 3px;
@@ -434,16 +447,16 @@
   /* --- Голос --- */
   .voice-box { text-align: center; }
   .mic-btn {
-    width: 76px;
-    height: 76px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.28), rgba(255,255,255,0.06));
     color: var(--accent);
-    font-size: 32px;
+    font-size: 34px;
     cursor: pointer;
     transition: 0.25s;
-    margin-bottom: 14px;
+    margin-bottom: 8px;
     line-height: 1;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
     backdrop-filter: blur(12px);
@@ -460,13 +473,13 @@
     70% { box-shadow: 0 0 0 18px rgba(255, 95, 126, 0); }
     100% { box-shadow: 0 0 0 0 rgba(255, 95, 126, 0); }
   }
-  .voice-status { color: var(--muted); font-size: 13px; margin-bottom: 10px; min-height: 42px; }
+  .voice-status { color: var(--muted); font-size: 15px; margin-bottom: 6px; min-height: 40px; }
   .voice-heard {
     background: rgba(255, 255, 255, 0.09);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 12px;
     padding: 8px 12px;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text);
   }
 
@@ -500,9 +513,9 @@
     justify-content: space-between;
     background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.07));
     border-top: 1px solid rgba(255,255,255,0.14);
-    padding: 10px 14px;
+    padding: 9px 14px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text);
     transition: background 0.2s;
     user-select: none;
@@ -511,7 +524,7 @@
   .curtain-bar:hover { background: rgba(255, 255, 255, 0.22); }
   .curtain-ico { display: inline-block; transition: transform 0.4s; font-size: 14px; }
   .cmd-curtain.open .curtain-ico { transform: rotate(180deg); }
-  .voice-hint { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.7; text-align: left; color: var(--text); }
+  .voice-hint { margin-top: 10px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; color: var(--text); }
   .voice-hint b { font-weight: 600; }
 
   /* --- Всплывающее окно --- */
@@ -562,10 +575,11 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  .status-panel { color: var(--muted); font-size: 13px; line-height: 2; }
+  .status-panel { color: var(--muted); font-size: 15px; line-height: 1.75; }
   .status-panel div { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .status-panel div:last-child { border-bottom: none; }
   .status-panel b { color: var(--text); font-weight: 600; }
+  .status-panel .mat-icon.icon15 { font-size: 18px; margin-right: 6px; vertical-align: -3px; }
 
   /* --- Анимации иконок работающих устройств --- */
   @keyframes spinFan {
@@ -732,20 +746,28 @@
     header h1 { font-size: 18px; }
     header { margin: 0 auto 10px; padding: 9px 18px; }
     header .clock { font-size: 12px; }
-    .scenario-btn { padding: 8px 6px; font-size: 12px; border-radius: 12px; }
-    .scenario-btn .mat-icon { font-size: 20px; margin-bottom: 4px; }
-    .scenario-grid { gap: 8px; }
-    .scenarios { padding: 10px 12px; }
-    .weather-card { padding: 10px 12px 9px; }
+    .scenario-btn { padding: 6px 5px 5px; font-size: 14px; border-radius: 12px; }
+    .scenario-btn .mat-icon { font-size: 26px; margin-bottom: 2px; }
+    .scenario-grid { gap: 7px; }
+    .scenarios { padding: 9px 11px; }
+    .weather-card { padding: 9px 11px 8px; }
     .weather-day { padding: 5px 8px; }
-    .wd-line1 { font-size: 12px; }
-    .quick-btn { padding: 8px 6px; font-size: 12px; }
-    .mic-btn { width: 56px; height: 56px; font-size: 28px; margin-bottom: 6px; }
-    .mic-btn .mat-icon { font-size: 26px; }
-    .voice-status { font-size: 11px; min-height: 32px; margin-bottom: 5px; }
-    .curtain-bar { padding: 7px 12px; font-size: 12px; }
-    .status-panel { font-size: 11.5px; line-height: 1.7; }
+    .wd-line1 { font-size: 14px; }
+    .wd-line1 .wd-ico { font-size: 20px; }
+    .quick-btn { padding: 7px 5px; font-size: 14px; }
+    .mic-btn { width: 54px; height: 54px; font-size: 30px; margin-bottom: 5px; }
+    .mic-btn .mat-icon { font-size: 34px; }
+    .voice-status { font-size: 14px; min-height: 34px; margin-bottom: 4px; }
+    .curtain-bar { padding: 7px 12px; font-size: 14px; }
+    .status-panel { font-size: 14px; line-height: 1.6; }
     .status-panel div { padding: 2px 0; }
+    .toggle-row { font-size: 14px; margin-bottom: 6px; }
+    .control-row .label-row { font-size: 13px; margin-bottom: 6px; }
+    .control-row .label-row b { font-size: 15px; }
+    .card h2 { font-size: 15px; margin-bottom: 7px; }
+    .card h2 .icon { font-size: 22px; }
+    .card h2 .mat-icon { font-size: 23px; }
+    .voice-hint { font-size: 13px; }
     footer { margin-top: 8px; font-size: 10px; }
   }
 
@@ -828,8 +850,8 @@
         <span class="slider"></span>
       </label>
     </div>
-    <p style="color:var(--muted); font-size:13px;">Статус:
-      <span id="mainLightStatus"><span class="status-bulb"></span>Выключено</span>
+    <p style="color:var(--muted); font-size:15px; margin:0;">Статус:
+      <span id="mainLightStatus" style="font-size:15px;"><span class="status-bulb"></span>Выключено</span>
     </p>
   </div>
 
@@ -882,9 +904,9 @@
       <div class="control-row">
         <div class="label-row">
           <span>Скорость вентилятора</span>
-          <span><b id="acFanValue">Средняя</b></span>
+          <span><b id="acFanValue">100%</b></span>
         </div>
-        <input type="range" id="acFanSlider" min="1" max="3" step="1" value="2" oninput="setAcFan(this.value)">
+        <input type="range" id="acFanSlider" min="0" max="100" step="5" value="100" oninput="setAcFan(this.value)">
       </div>
     </div>
   </div>
@@ -947,14 +969,17 @@
             🗣 Активация: скажите «дом» или нажмите на пиктограмму микрофона<br>
             🗣 Затем — «включи свет», «выключи подсветку»<br>
             🗣 Можно сразу: «дом, температура 24 градуса»<br>
-            🗣 Отопление: «увеличь на 2 градуса», «добавь 5 градусов»,<br>
-            🗣 «убавь на 3 градуса», «температура 26»<br>
+            🗣 Отопление: «включи отопление», «обогрей», «выключи отопление»,<br>
+            🗣 «увеличь на 2 градуса», «добавь температуру на 3 градуса»,<br>
+            🗣 «убавь на 3 градуса», «поставь температуру 26 градусов», «температура 26»<br>
+            🗣 (При повышении температуры насос запускается, при понижении — выключается)<br>
             🗣 «Яркость 50 процентов», «увеличь яркость»<br>
             🗣 «Включи мотор», «шторы наполовину», «закрой шторы на 50 процентов»<br>
             🗣 «закрой шторы», «раздвинь шторы»<br>
             🗣 «включи кондиционер», «выключи кондиционер»<br>
-            🗣 Режимы: «включи охлаждение 24 градуса», «обогрев», «осушение»<br>
-            🗣 «кондиционер в авто-режиме», «скорость вентилятора выше/ниже»<br>
+            🗣 «включи охлаждение 18 градусов», «обогрев», «осушение», «авто»<br>
+            🗣 «добавь температуру кондиционера на 3 градуса», «убавь», «поставь 24»<br>
+            🗣 «кондиционер в авто-режиме», «скорость вентилятора 50 процентов»<br>
             🗣 Автоматика: при снижении отопления кондиционер сам включится в «авто»,<br>
             🗣 при повышении (нужно отопление) — кондиционер выключится<br>
             🗣 Сценарии: «привет, я дома», «вечер», «кино», «утро», «ночь», «я ушёл», «пока»
@@ -972,12 +997,12 @@
   <div class="card c-status">
     <h2><span class="icon mat-icon filled">query_stats</span> Текущее состояние</h2>
     <div class="status-panel" id="statusPanel">
-      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">light_mode</span>Основное освещение: <b>выключено</b></div>
-      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">lightbulb</span>Подсветка: <b>выключена (0%)</b></div>
-      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">device_thermostat</span>Отопление: <b>20 °C</b></div>
-      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">air</span>Мотор рециркуляции: <b>выключен</b></div>
-      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">ac_unit</span>Кондиционер: <b>выключен</b></div>
-      <div><span class="mat-icon filled" style="font-size:15px; margin-right:6px; vertical-align:-2px;">vertical_shades</span>Шторы: <b>открыты</b></div>
+      <div><span class="mat-icon filled icon15">light_mode</span>Основное освещение: <b>выключено</b></div>
+      <div><span class="mat-icon filled icon15">lightbulb</span>Подсветка: <b>выключена (0%)</b></div>
+      <div><span class="mat-icon filled icon15">device_thermostat</span>Отопление: <b>20 °C</b></div>
+      <div><span class="mat-icon filled icon15">air</span>Мотор рециркуляции: <b>выключен</b></div>
+      <div><span class="mat-icon filled icon15">ac_unit</span>Кондиционер: <b>выключен</b></div>
+      <div><span class="mat-icon filled icon15">vertical_shades</span>Шторы: <b>открыты</b></div>
     </div>
   </div>
 
@@ -1143,7 +1168,7 @@
     ac: false,
     acTemp: 22,
     acMode: 'cool',
-    acFan: 2,
+    acFan: 100,
     curtainMax: 4000,
     hyst: 0.5,
     guardEnabled: true,
@@ -1480,10 +1505,16 @@
 
   function setLedBrightness(v) {
     state.ledBrightness = parseInt(v, 10);
+    if (!state.led) {
+      state.led = true; // при смене яркости выключенной подсветки она включается
+      $('ledToggle').checked = true;
+    }
     $('ledBrightnessSlider').value = state.ledBrightness;
     $('ledBrightness').textContent = state.ledBrightness;
     updateLedPreview();
-    showToast('✨ Яркость подсветки: ' + state.ledBrightness + '%');
+    stateChanged(true);
+    showToast(state.ledBrightness > 0 ? '✨ Подсветка включена: ' + state.ledBrightness + '%' : '🌑 Подсветка: 0%');
+    sendToSerial('LED=' + state.ledBrightness);
     syncAfter(120);
     updateStatus();
   }
@@ -1632,7 +1663,6 @@
     dry:  { label: '💧 Осушение' },
     auto: { label: '🔄 Авто' }
   };
-  const AC_FANS = ['Низкая', 'Средняя', 'Высокая'];
 
   function _ac(on, silent) {
     state.ac = on;
@@ -1653,15 +1683,16 @@
     });
   }
   function _acFan(v, silent) {
-    state.acFan = Math.max(1, Math.min(3, parseInt(v, 10)));
+    state.acFan = Math.max(0, Math.min(100, parseInt(v, 10) || 0));
     const sl = $('acFanSlider');
     if (sl) sl.value = state.acFan;
     const tv = $('acFanValue');
-    if (tv) tv.textContent = AC_FANS[state.acFan - 1];
+    if (tv) tv.textContent = state.acFan + '%';
   }
 
   function toggleAc(on) {
     _ac(on);
+    clearAutoFanDrop();
     showToast(on ? '❄ Кондиционер включён' : '❄ Кондиционер выключен');
     sendToSerial('AC=' + (on ? 1 : 0));
     syncAfter(120);
@@ -1677,20 +1708,58 @@
     updateStatus();
   }
 
+  // Пресеты режимов кондиционера (кнопка режима сразу включает/настраивает):
+  // охлаждение 18 °C, авто 20 °C, обогрев 24 °C, осушение 22 °C (вентиляция)
+  const AC_MODE_PRESETS = {
+    cool: { temp: 18, fan: 100 },
+    auto: { temp: 20, fan: 100 },
+    heat: { temp: 24, fan: 100 },
+    dry:  { temp: 22, fan: 100 }
+  };
+  // В режиме «авто» вентилятор после старта снижается до 30% через фиксированное время
+  const AUTO_FAN_DROP_MS = 10000;
+  let autoFanDropTimer = null;
+  function scheduleAutoFanDrop() {
+    clearAutoFanDrop();
+    autoFanDropTimer = setTimeout(function () {
+      autoFanDropTimer = null;
+      _acFan(30);
+      showToast('🔄 Авто: вентилятор снижен до 30%');
+      syncAfter(120);
+      stateChanged(true);
+      updateStatus();
+    }, AUTO_FAN_DROP_MS);
+  }
+  function clearAutoFanDrop() {
+    if (autoFanDropTimer) { clearTimeout(autoFanDropTimer); autoFanDropTimer = null; }
+  }
+
   function setAcMode(m) {
     if (!AC_MODES[m]) return;
     _acMode(m);
-    showToast('❄ Режим кондиционера: ' + AC_MODES[m].label.replace(/^.. /, ''));
+    clearAutoFanDrop();
+    const preset = AC_MODE_PRESETS[m];
+    if (preset) {
+      if (!state.ac) _ac(true);
+      _acTemp(preset.temp);
+      _acFan(preset.fan);
+      if (m === 'auto') scheduleAutoFanDrop();
+    }
+    showToast('❄ Режим кондиционера: ' + AC_MODES[m].label.replace(/^.. /, '') + ' · ' + state.acTemp + ' °C · вентилятор ' + state.acFan + '%');
+    sendToSerial('AC=' + (state.ac ? 1 : 0));
+    sendToSerial('ACTEMP=' + state.acTemp);
+    sendToSerial('ACFAN=' + state.acFan);
     sendToSerial('ACMODE=' + m);
+    syncAfter(200);
     stateChanged(true);
     updateStatus();
   }
 
   function setAcFan(v) {
-    state.acFan = Math.max(1, Math.min(3, parseInt(v, 10)));
-    $('acFanSlider').value = state.acFan;
-    $('acFanValue').textContent = AC_FANS[state.acFan - 1];
-    showToast('❄ Вентилятор кондиционера: ' + AC_FANS[state.acFan - 1]);
+    clearAutoFanDrop();
+    _acFan(v);
+    showToast('❄ Вентилятор кондиционера: ' + state.acFan + '%');
+    sendToSerial('ACFAN=' + state.acFan);
     syncAfter(120);
     stateChanged(true);
     updateStatus();
@@ -1751,7 +1820,7 @@
         _pump(false);
         _ac(false);
         _acMode('cool');
-        _acFan(1);
+        _acFan(100);
         _curtains(0);
       }
     }
@@ -2009,7 +2078,7 @@
   function updateStatus() {
     const t = devNames();
     const icon = function (n, c, anim) {
-      return '<span class="mat-icon filled ' + (anim || '') + '" style="font-size:15px; color:' + (c || 'var(--accent)') + '; margin-right:6px; vertical-align:-2px;">' + n + '</span>';
+      return '<span class="mat-icon filled ' + (anim || '') + '" style="font-size:18px; color:' + (c || 'var(--accent)') + '; margin-right:6px; vertical-align:-3px;">' + n + '</span>';
     };
     const onCls = function (on) { return on ? 'status-line-on' : ''; };
     const moving = curtainsMoving && state.curtains > 0 && state.curtains < 100;
@@ -2162,6 +2231,27 @@
     return words.some(function (w) { return text.indexOf(w) !== -1; });
   }
 
+  // Словесные числа («два», «пять», «двадцать три», «пол») → число
+  function numFromWords(text) {
+    const units = { 'один': 1, 'одна': 1, 'одно': 1, 'два': 2, 'две': 2, 'три': 3, 'четыре': 4, 'пять': 5, 'шесть': 6, 'семь': 7, 'восемь': 8, 'девять': 9 };
+    const teens = { 'десять': 10, 'одиннадцать': 11, 'двенадцать': 12, 'тринадцать': 13, 'четырнадцать': 14, 'пятнадцать': 15, 'шестнадцать': 16, 'семнадцать': 17, 'восемнадцать': 18, 'девятнадцать': 19 };
+    const tens = { 'двадцать': 20, 'тридцать': 30, 'сорок': 40, 'пятьдесят': 50, 'шестьдесят': 60, 'семьдесят': 70, 'восемьдесят': 80, 'девяносто': 90, 'сто': 100 };
+    const frac = { 'пол': 0.5, 'полтора': 1.5 };
+    const tokens = text.split(' ');
+    let total = 0, cur = 0, found = false;
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (t in tens) { total += cur; cur = tens[t]; found = true; }
+      else if (t in teens) { total += cur + teens[t]; cur = 0; found = true; }
+      else if (t in units) { cur += units[t]; found = true; }
+      else if (t in frac) { total += cur + frac[t]; cur = 0; found = true; }
+      else if (found && t === 'и') { /* разделитель составных чисел */ }
+      else if (found) { total += cur; cur = 0; }
+    }
+    if (found) total += cur;
+    return found ? total : NaN;
+  }
+
   function processVoiceCommand(raw) {
     const text = norm(raw);
     let action = '';
@@ -2229,7 +2319,7 @@
     if (action === '') {
       // Кондиционер (проверяем до температуры, чтобы не перепутать с отоплением)
       const acContext = includesAny(text, ['кондиционер', 'кондей', 'кондер']);
-      if (acContext || includesAny(text, ['охлажд', 'обогрев', 'осушен'])) {
+      if (acContext || includesAny(text, ['охлажд', 'осушен'])) {
         // Определяем режим работы
         let mode = '';
         if (includesAny(text, ['охлажд', 'холод'])) mode = 'cool';
@@ -2240,9 +2330,11 @@
         if (mode) {
           toggleAc(true);
           setAcMode(mode);
-          if (firstNum) {
-            setAcTemp(firstNum);
-            action = 'Кондиционер: ' + AC_MODES[mode].label.replace(/^..? /, '') + ' ' + firstNum + ' °C';
+          const spokenNum = numFromWords(text);
+          const num = !isNaN(firstNum) ? firstNum : spokenNum;
+          if (firstNum || !isNaN(spokenNum)) {
+            setAcTemp(num);
+            action = 'Кондиционер: ' + AC_MODES[mode].label.replace(/^..? /, '') + ' ' + num + ' °C';
           } else {
             action = 'Кондиционер: ' + AC_MODES[mode].label.replace(/^..? /, '');
           }
@@ -2252,45 +2344,84 @@
         } else if (acContext && includesAny(text, ['включи', 'включ', 'запусти', 'запуск'])) {
           toggleAc(true);
           action = 'Кондиционер включён (' + state.acTemp + ' °C)';
-        } else if (acContext && firstNum) {
+        } else if (acContext && (includesAny(text, ['увелич', 'выше', 'добав', 'прибав', 'подним', 'повыс', 'плюс', 'горяч']) ||
+                                includesAny(text, ['уменьш', 'ниже', 'убав', 'сниз', 'опуст', 'пониз', 'минус', 'холодн']))) {
+          // Температура кондиционера — как у отопления, но без циркуляционного насоса
+          const up = includesAny(text, ['увелич', 'выше', 'добав', 'прибав', 'подним', 'повыс', 'плюс', 'горяч']);
+          const spokenNum = numFromWords(text);
+          const num = !isNaN(firstNum) ? firstNum : spokenNum;
+          let v = NaN;
+          if (!isNaN(num) && num !== '') v = up ? state.acTemp + num : state.acTemp - num;
+          else v = up ? state.acTemp + 1 : state.acTemp - 1;
+          if (!isNaN(v)) {
+            v = Math.round(v);
+            v = Math.max(16, Math.min(30, v));
+            toggleAc(true);
+            setAcTemp(v);
+            action = 'Кондиционер: ' + v + ' °C';
+          }
+        } else if (acContext && (firstNum || !isNaN(numFromWords(text)))) {
+          const num = !isNaN(firstNum) ? firstNum : numFromWords(text);
           toggleAc(true);
-          setAcTemp(firstNum);
-          action = 'Кондиционер: ' + firstNum + ' °C';
+          setAcTemp(num);
+          action = 'Кондиционер: ' + num + ' °C';
         }
       }
     }
 
     if (action === '') {
-      // Вентилятор кондиционера (по скоростям работы)
+      // Вентилятор кондиционера (скорость в процентах 0..100)
       if (includesAny(text, ['вентилятор', 'скорость', 'обдув'])) {
         let f = NaN;
-        if (firstNum && firstNum >= 1 && firstNum <= 3) f = firstNum;
-        else if (includesAny(text, ['высок', 'максим', 'больше', 'сильн', 'более'])) f = 3;
-        else if (includesAny(text, ['средн', 'середина'])) f = 2;
-        else if (includesAny(text, ['низк', 'минимальн', 'меньше', 'тише', 'слаб'])) f = 1;
+        const spokenNum = numFromWords(text);
+        const num = !isNaN(firstNum) ? firstNum : spokenNum;
+        if (!isNaN(num) && num >= 0 && num <= 100) f = num;
+        else if (includesAny(text, ['высок', 'максим', 'больше', 'сильн', 'более'])) f = 100;
+        else if (includesAny(text, ['средн', 'середина', 'средне'])) f = 50;
+        else if (includesAny(text, ['низк', 'минимальн', 'меньше', 'тише', 'слаб'])) f = 25;
         if (!isNaN(f)) {
           toggleAc(true);
           setAcFan(f);
-          action = 'Вентилятор кондиционера: ' + AC_FANS[f - 1];
+          action = 'Вентилятор кондиционера: ' + f + '%';
         }
       }
     }
 
     if (action === '') {
       // Температура / отопление
-      if (includesAny(text, ['температур', 'градус', 'отоплен', 'тепло'])) {
-        let v = NaN;
-        const upWord = includesAny(text, ['увелич', 'выше', 'добав', 'прибав', 'подним', 'повыс', 'приплюс', 'плюс']);
-        const downWord = includesAny(text, ['уменьш', 'ниже', 'убав', 'сниз', 'опуст', 'пониз', 'минус']);
-        if (upWord && firstNum) v = state.temp + firstNum;       // «добавь на 3 градуса»
-        else if (downWord && firstNum) v = state.temp - firstNum; // «убавь на 2 градуса»
-        else if (upWord) v = state.temp + 1;
-        else if (downWord) v = state.temp - 1;
-        else if (firstNum) v = firstNum;                          // «температура 24 градуса»
-        if (!isNaN(v)) {
-          v = Math.max(15, Math.min(30, v));
-          setTemp(v);
-          action = 'Отопление: ' + v + ' °C';
+      if (includesAny(text, ['температур', 'градус', 'отоплен', 'отопл', 'тепл', 'жар', 'нагре', 'обогре', 'горяч', 'холодн', 'мороз', 'подмороз'])) {
+        // Явное включение/выключение отопления («включи отопление», «обогрей»)
+        if (includesAny(text, ['включи отоплен', 'запусти отоплен', 'включи нагрев', 'запусти нагрев', 'включи обогрев', 'обогрей', 'нагрей', 'сделай теплее', 'стало холодно', 'становится холодно', 'холодно дом', 'холодно в'])) {
+          state.temp = Math.max(state.temp, 24);
+          $('tempSlider').value = state.temp;
+          $('tempValue').textContent = state.temp;
+          setTemp(state.temp);
+          togglePump(true);
+          action = 'Отопление включено: ' + state.temp + ' °C, насос запущен';
+        } else if (includesAny(text, ['выключи отоплен', 'останови отоплен', 'выключи нагрев', 'останови нагрев', 'выключи обогрев', 'останови обогрев', 'хватит греть', 'прекрати отоплен'])) {
+          togglePump(false);
+          action = 'Отопление выключено, насос остановлен';
+        } else {
+          let v = NaN;
+          const upWord = includesAny(text, ['увелич', 'выше', 'добав', 'прибав', 'подним', 'повыс', 'приплюс', 'плюс', 'горяч', 'жарче', 'теплее']);
+          const downWord = includesAny(text, ['уменьш', 'ниже', 'убав', 'сниз', 'опуст', 'пониз', 'минус', 'холодн', 'холоднее']);
+          const spokenNum = numFromWords(text);
+          const num = !isNaN(firstNum) ? firstNum : spokenNum;
+          if (upWord && !isNaN(num) && num !== '') v = state.temp + num;      // «добавь температуру на 3 градуса»
+          else if (downWord && !isNaN(num) && num !== '') v = state.temp - num; // «убавь температуру на 2 градуса»
+          else if (upWord) v = state.temp + 1;                                 // «увеличь температуру» / «потеплее»
+          else if (downWord) v = state.temp - 1;                               // «убавь температуру» / «похолоднее»
+          else if (!isNaN(num) && num !== '') v = num;                         // «поставь температуру 24 градуса»
+          if (!isNaN(v)) {
+            v = Math.round(v);
+            v = Math.max(15, Math.min(30, v));
+            setTemp(v);
+            // При увеличении температуры включаем циркуляционный насос,
+            // при уменьшении — выключаем
+            if (upWord) togglePump(true);
+            else if (downWord) togglePump(false);
+            action = 'Отопление: ' + v + ' °C' + (upWord ? ', насос запущен' : (downWord ? ', насос остановлен' : ''));
+          }
         }
       }
     }

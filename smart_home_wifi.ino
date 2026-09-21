@@ -81,7 +81,7 @@ int ledVal    = 0;
 int heatTemp  = 20;
 int pumpOn    = 0;
 int acOn      = 0;
-int acFan     = 1;
+int acFan     = 100;
 String acMode = "cool";
 int acTemp    = 22;
 
@@ -330,7 +330,7 @@ void handleCommand(String line) {
   else if (key == "AC")      acPowerSet(iv);
   else if (key == "ACTEMP")  acTemp = constrain(iv, 16, 30);
   else if (key == "ACMODE")  { acMode = val; acMode.trim(); }
-  else if (key == "ACFAN")   { acFan = constrain(iv, 1, 3); applyACFan(); }
+  else if (key == "ACFAN")   { acFan = constrain(iv, 0, 100); applyACFan(); }
   else if (key == "CUR")     { curtainPercent = constrain(iv, 0, 100); curtains.moveTo((long)curtainPercent * curtainMaxSteps / 100L); }
   else if (key == "SCENE")   runScene(val);
   else if (key == "CMAX")    curtainMaxSteps = constrain(iv, 500, 20000);
@@ -366,7 +366,7 @@ void acPowerSet(int on) {
 }
 void applyACFan() {
   if (!acOn) return;
-  int pwm = (acFan == 1) ? 170 : (acFan == 2) ? 215 : 255;
+  int pwm = map(constrain(acFan, 0, 100), 0, 100, 0, 255);
   analogWrite(PIN_AC_FAN, pwm);
 }
 
@@ -376,7 +376,7 @@ void runScene(String name) {
   else if (name == "cinema")  { curtainPercent = 100; ledSet(25); }
   else if (name == "morning") { curtainPercent = 0; ledSet(40); heatTemp = 22; }
   else if (name == "night")   { mainLightSet(0); ledSet(0); heatTemp = 19; curtainPercent = 100; }
-  else if (name == "away")    { mainLightSet(0); ledSet(0); heatTemp = 19; pumpSet(0); acPowerSet(0); acFan = 1; curtainPercent = 0; }
+  else if (name == "away")    { mainLightSet(0); ledSet(0); heatTemp = 19; pumpSet(0); acPowerSet(0); acFan = 100; curtainPercent = 0; }
   curtains.moveTo((long)curtainPercent * curtainMaxSteps / 100L);
 }
 
