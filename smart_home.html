@@ -25,6 +25,28 @@
     --glass: rgba(255, 255, 255, 0.08);
     --glass-strong: rgba(255, 255, 255, 0.13);
     --stroke: rgba(255, 255, 255, 0.16);
+    --bg1: #0a0e21;
+    --bg2: #111631;
+    --bg3: #0b0f24;
+    --star: rgba(255,255,255,0.5);
+  }
+  html[data-theme="light"] {
+    --text: #152036;
+    --muted: rgba(21, 32, 54, 0.62);
+    --accent: #1666d8;
+    --green: #0f9f4f;
+    --red: #d63b5e;
+    --amber: #a86a00;
+    --glass: rgba(255, 255, 255, 0.62);
+    --glass-strong: rgba(255, 255, 255, 0.85);
+    --stroke: rgba(21, 32, 54, 0.16);
+    --bg1: #eef3fb;
+    --bg2: #dde7f5;
+    --bg3: #e6eef9;
+    --star: transparent;
+  }
+  @media (prefers-color-scheme: light) {
+    html[data-theme="auto"] { --text: #152036; --muted: rgba(21, 32, 54, 0.62); --accent: #1666d8; --green: #0f9f4f; --red: #d63b5e; --amber: #a86a00; --glass: rgba(255, 255, 255, 0.62); --glass-strong: rgba(255, 255, 255, 0.85); --stroke: rgba(21, 32, 54, 0.16); --bg1: #eef3fb; --bg2: #dde7f5; --bg3: #e6eef9; --star: transparent; }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { min-height: 100%; }
@@ -36,9 +58,10 @@
       radial-gradient(1200px 800px at 85% -10%, rgba(91, 84, 255, 0.35), transparent 60%),
       radial-gradient(1000px 700px at -10% 20%, rgba(22, 170, 255, 0.28), transparent 55%),
       radial-gradient(900px 700px at 50% 120%, rgba(255, 90, 170, 0.20), transparent 60%),
-      linear-gradient(160deg, #0a0e21 0%, #111631 50%, #0b0f24 100%);
+      linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
     background-attachment: fixed;
     overflow-x: hidden;
+    transition: background 0.4s ease, color 0.4s ease;
   }
   body::before {
     content: "";
@@ -544,6 +567,147 @@
   .status-panel div:last-child { border-bottom: none; }
   .status-panel b { color: var(--text); font-weight: 600; }
 
+  /* --- Анимации иконок работающих устройств --- */
+  @keyframes spinFan {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 3px rgba(255, 200, 60, 0.5)); }
+    50% { opacity: 0.55; filter: drop-shadow(0 0 9px rgba(255, 200, 60, 0.9)); }
+  }
+  @keyframes breatheLight {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(255, 215, 90, 0.55)); }
+    50% { opacity: 0.6; filter: drop-shadow(0 0 10px rgba(255, 215, 90, 0.95)); }
+  }
+  @keyframes pumpSpin {
+    0%, 100% { transform: rotate(0deg); opacity: 1; }
+    50% { transform: rotate(180deg); opacity: 0.5; }
+  }
+  @keyframes curtainWork {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  .mat-icon.active-anim.anim-ac { animation: spinFan 1.6s linear infinite; color: var(--accent); }
+  .mat-icon.active-anim.anim-led { animation: breatheLight 1.4s ease-in-out infinite; }
+  .mat-icon.active-anim.anim-heat { animation: pulseGlow 1.2s ease-in-out infinite; color: var(--amber); }
+  .mat-icon.active-anim.anim-light { animation: breatheLight 1.8s ease-in-out infinite; }
+  .mat-icon.active-anim.anim-pump { animation: pumpSpin 1s steps(2) infinite; }
+  .mat-icon.active-anim.anim-curtains { animation: curtainWork 0.9s ease-in-out infinite; }
+  .status-line-on { color: var(--green); font-weight: 600; }
+
+  /* --- Кнопка настроек --- */
+  .theme-btn, .settings-btn {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+  }
+  .theme-btn:hover, .settings-btn:hover { background: rgba(255, 255, 255, 0.18); }
+  .theme-btn .mat-icon, .settings-btn .mat-icon { font-size: 16px; }
+
+  /* --- Модальное окно настроек --- */
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 8, 20, 0.62);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    z-index: 400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .settings-overlay.open { display: flex; }
+  .settings-panel {
+    width: min(640px, 100%);
+    max-height: 86vh;
+    overflow-y: auto;
+    background: linear-gradient(180deg, var(--bg2), var(--bg3));
+    border: 1px solid var(--stroke);
+    border-radius: 22px;
+    padding: 22px 24px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .settings-panel h2 { font-size: 16px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .settings-panel .sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .settings-section {
+    border: 1px solid var(--stroke);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    background: var(--glass);
+  }
+  .settings-section h3 { font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; color: var(--text); }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+  .settings-row:last-child { margin-bottom: 0; }
+  .settings-row label { color: var(--text); }
+  .settings-row .hint { color: var(--muted); font-size: 11px; }
+  .settings-input {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 6px 8px;
+    font-size: 13px;
+    width: 110px;
+    outline: none;
+    text-align: center;
+  }
+  html[data-theme="light"] .settings-input { background: rgba(255,255,255,0.7); }
+  .settings-input:focus { border-color: var(--accent); }
+  .settings-btn-sm {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .settings-btn-sm:hover { background: rgba(255, 255, 255, 0.18); }
+  .settings-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 2px;
+  }
+  .settings-close:hover { color: var(--text); }
+
+  /* --- Расписание (матрица) --- */
+  .sched-grid { margin-top: 8px; }
+  .sched-item {
+    display: grid;
+    grid-template-columns: 74px 1fr 66px auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .sched-item select, .sched-item input {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 6px 8px;
+    font-size: 12px;
+    outline: none;
+  }
+  html[data-theme="light"] .sched-item select, html[data-theme="light"] .sched-item input { background: rgba(255,255,255,0.7); }
+  .sched-add { margin-top: 8px; }
+
   footer {
     position: relative;
     z-index: 1;
@@ -637,6 +801,10 @@
     <span class="wifi-status" id="wifiStatus">Wi-Fi: выкл</span>
   </div>
   <div class="clock" id="clock"></div>
+  <div class="serial-actions">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Сменить тему"><span class="mat-icon filled">dark_mode</span><span id="themeBtnText">Тёмная</span></button>
+    <button class="settings-btn" onclick="openSettings()" title="Настройки"><span class="mat-icon filled">settings</span>Настройки</button>
+  </div>
 </header>
 
 <div class="layout">
@@ -848,6 +1016,119 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Настройки -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if (event.target === this) closeSettings()">
+  <div class="settings-panel">
+    <h2><span class="mat-icon filled">settings</span> Настройки
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </h2>
+    <div class="sub">Настройки сохраняются локально и применяются сразу.</div>
+
+    <div class="settings-section">
+      <h3><span class="mat-icon filled">palette</span> Оформление</h3>
+      <div class="settings-row">
+        <label>Тема оформления</label>
+        <select class="settings-input" id="themeSelect" onchange="applyThemeSel(this.value)">
+          <option value="dark">Тёмная</option>
+          <option value="light">Светлая</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label>Звуковые подтверждения</label>
+        <label class="switch">
+          <input type="checkbox" id="soundOn" onchange="saveSound()">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="mat-icon filled">vertical_shades</span> Калибровка штор</h3>
+      <div class="settings-row">
+        <label>Шагов на 100% хода <span class="hint">(CMAX)</span></label>
+        <input class="settings-input" type="number" id="cmaxInput" min="500" max="20000" step="100"
+          onchange="setCurtainMax(this.value)">
+      </div>
+      <div class="settings-row">
+        <label>Кнопки проверки</label>
+        <div style="display:flex; gap:6px;">
+          <button class="settings-btn-sm" onclick="setCurtains(0)">Открыть</button>
+          <button class="settings-btn-sm" onclick="setCurtains(100)">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="mat-icon filled">device_thermostat</span> Климат-автоматика</h3>
+      <div class="settings-row">
+        <label>Порог срабатывания датчика, °C <span class="hint">(HYST)</span></label>
+        <input class="settings-input" type="number" id="hystInput" min="0.1" max="2.0" step="0.1"
+          onchange="setHys(this.value)">
+      </div>
+      <div class="settings-row" style="color:var(--muted); font-size:12px;">
+        Защита от параллельного включения: при работе кондиционера нагрев не включается и наоборот — контроллер сам блокирует конфликт.
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="mat-icon filled">schedule</span> Расписание (матрица)</h3>
+      <div class="sched-grid" id="schedGrid"></div>
+      <div class="sched-add">
+        <button class="settings-btn-sm" onclick="addSchedRow()">+ Добавить пункт</button>
+        <button class="settings-btn-sm" onclick="syncSchedule()">Отправить на контроллер</button>
+      </div>
+      <div class="sub" style="margin-top:8px;">Контроллер хранит расписание и срабатывает даже без интернета; панель синхронизирует его при подключении.</div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="mat-icon filled">shield</span> Аварийная защита (heartbeat)</h3>
+      <div class="settings-row">
+        <label>Сторожевой таймер</label>
+        <label class="switch">
+          <input type="checkbox" id="guardOn" onchange="saveGuard()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <label>Таймаут ответа панели, сек <span class="hint">(HBIT)</span></label>
+        <input class="settings-input" type="number" id="guardTimeoutInput" min="10" max="3600" step="5"
+          onchange="saveGuard()">
+      </div>
+      <div class="settings-row" style="color:var(--muted); font-size:12px;">
+        Если контроллер не получает «heartbeat» от панели заданное время, он сам возвращает сценарий «дома» (включит свет, комфортную температуру).
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="mat-icon filled">badge</span> Названия устройств</h3>
+      <div class="settings-row">
+        <label>Основное освещение</label>
+        <input class="settings-input" type="text" id="nameLight" onchange="applyDeviceNames()">
+      </div>
+      <div class="settings-row">
+        <label>Светодиодная подсветка</label>
+        <input class="settings-input" type="text" id="nameLed" onchange="applyDeviceNames()">
+      </div>
+      <div class="settings-row">
+        <label>Отопление</label>
+        <input class="settings-input" type="text" id="nameHeat" onchange="applyDeviceNames()">
+      </div>
+      <div class="settings-row">
+        <label>Мотор рециркуляции</label>
+        <input class="settings-input" type="text" id="namePump" onchange="applyDeviceNames()">
+      </div>
+      <div class="settings-row">
+        <label>Кондиционер</label>
+        <input class="settings-input" type="text" id="nameAc" onchange="applyDeviceNames()">
+      </div>
+      <div class="settings-row">
+        <label>Шторы</label>
+        <input class="settings-input" type="text" id="nameCurtains" onchange="applyDeviceNames()">
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>Панель управления умным домом · локальная демонстрация</footer>
 
 <script>
@@ -862,8 +1143,13 @@
     ac: false,
     acTemp: 22,
     acMode: 'cool',
-    acFan: 2
+    acFan: 2,
+    curtainMax: 4000,
+    hyst: 0.5,
+    guardEnabled: true,
+    guardTimeout: 45
   };
+  let curtainsMoving = false;
 
   const $ = id => document.getElementById(id);
 
@@ -881,6 +1167,252 @@
   updateClock();
   setInterval(updateClock, 1000);
 
+  // --- Хранилище настроек ---
+  function storeGet(key, def) {
+    try {
+      const v = localStorage.getItem('sh_' + key);
+      return v === null ? def : v;
+    } catch (e) { return def; }
+  }
+  function storeSet(key, val) {
+    try { localStorage.setItem('sh_' + key, val); } catch (e) {}
+  }
+
+  // --- Тема оформления ---
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    storeSet('theme', theme);
+    const btn = $('themeBtnText');
+    if (btn) btn.textContent = (theme === 'light' ? 'Светлая' : 'Тёмная');
+    const sel = $('themeSelect');
+    if (sel) sel.value = theme;
+    const ico = document.querySelector('#themeBtn .mat-icon');
+    if (ico) ico.textContent = (theme === 'light' ? 'light_mode' : 'dark_mode');
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    applyTheme(cur);
+    showToast(cur === 'light' ? '☀️ Светлая тема включена' : '🌙 Тёмная тема включена');
+  }
+  function applyThemeSel(v) { applyTheme(v); }
+
+  // --- Звуковые подтверждения (Web Audio API) ---
+  let audioCtx = null;
+  function beep(freq, dur, vol) {
+    if (!window.AudioContext && !window.webkitAudioContext) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = vol || 0.14;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + (dur || 0.09));
+    } catch (e) {}
+  }
+  function soundOn() { return storeGet('sound', '1') === '1'; }
+  function playConfirmSound() {
+    if (!soundOn()) return;
+    beep(740, 0.09, 0.12);
+  }
+  function playSceneSound() {
+    if (!soundOn()) return;
+    beep(520, 0.1, 0.12);
+    setTimeout(function () { beep(780, 0.12, 0.12); }, 110);
+  }
+  function saveSound() { storeSet('sound', $('soundOn').checked ? '1' : '0'); }
+
+  // --- Настройки: окно ---
+  function loadSettings() {
+    $('themeSelect').value = document.documentElement.getAttribute('data-theme') || 'dark';
+    $('soundOn').checked = soundOn();
+    $('cmaxInput').value = state.curtainMax || 4000;
+    $('hystInput').value = (state.hyst || 0.5).toFixed(1);
+    $('guardOn').checked = state.guardEnabled;
+    $('guardTimeoutInput').value = state.guardTimeout || 45;
+    $('nameLight').value = storeGet('nameLight', 'Основное освещение');
+    $('nameLed').value = storeGet('nameLed', 'Светодиодная подсветка');
+    $('nameHeat').value = storeGet('nameHeat', 'Отопление');
+    $('namePump').value = storeGet('namePump', 'Мотор рециркуляции');
+    $('nameAc').value = storeGet('nameAc', 'Кондиционер');
+    $('nameCurtains').value = storeGet('nameCurtains', 'Шторы');
+    renderSchedule();
+  }
+  function openSettings() {
+    loadSettings();
+    $('settingsOverlay').classList.add('open');
+  }
+  function closeSettings() {
+    $('settingsOverlay').classList.remove('open');
+  }
+
+  // --- Калибровка штор (CMAX) и порог датчика (HYST) ---
+  function setCurtainMax(v) {
+    const cm = Math.max(500, Math.min(20000, parseInt(v, 10) || 4000));
+    state.curtainMax = cm;
+    $('cmaxInput').value = cm;
+    sendToSerial('CMAX=' + cm);
+    showToast('🪟 Калибровка штор: ' + cm + ' шагов на 100%');
+  }
+  function setHys(v) {
+    const h = Math.max(0.1, Math.min(2.0, parseFloat(v) || 0.5));
+    state.hyst = h;
+    $('hystInput').value = h.toFixed(1);
+    sendToSerial('HYST=' + h.toFixed(1));
+    showToast('🌡 Порог срабатывания датчика: ' + h.toFixed(1) + ' °C');
+  }
+
+  // --- Названия устройств ---
+  function applyDeviceNames() {
+    storeSet('nameLight', $('nameLight').value);
+    storeSet('nameLed', $('nameLed').value);
+    storeSet('nameHeat', $('nameHeat').value);
+    storeSet('namePump', $('namePump').value);
+    storeSet('nameAc', $('nameAc').value);
+    storeSet('nameCurtains', $('nameCurtains').value);
+    updateDeviceTitles();
+  }
+  function devNames() {
+    return {
+      light: storeGet('nameLight', 'Основное освещение'),
+      led: storeGet('nameLed', 'Светодиодная подсветка'),
+      heat: storeGet('nameHeat', 'Отопление'),
+      pump: storeGet('namePump', 'Мотор рециркуляции'),
+      ac: storeGet('nameAc', 'Кондиционер'),
+      curtains: storeGet('nameCurtains', 'Шторы')
+    };
+  }
+  function updateDeviceTitles() {
+    const t = devNames();
+    const map = {
+      'c-light': t.light,
+      'c-led': t.led,
+      'c-heat': t.heat,
+      'c-ac': t.ac,
+      'c-curtains': t.curtains
+    };
+    Object.keys(map).forEach(function (key) {
+      const h2 = document.querySelector('.' + key + ' h2');
+      if (h2 && h2.querySelector('span.icon')) {
+        h2.innerHTML = h2.querySelector('span.icon').outerHTML + ' ' + map[key];
+      }
+    });
+  }
+
+  // --- Расписание (матрица) ---
+  let scheduleList = [];
+  function loadSchedule() {
+    try { scheduleList = JSON.parse(storeGet('sched', '[]')); } catch (e) { scheduleList = []; }
+    if (!Array.isArray(scheduleList)) scheduleList = [];
+  }
+  function saveSchedule() {
+    storeSet('sched', JSON.stringify(scheduleList));
+    renderSchedule();
+  }
+  function renderSchedule() {
+    const grid = $('schedGrid');
+    if (!grid) return;
+    if (scheduleList.length === 0) {
+      grid.innerHTML = '<div class="sub" style="margin-top:4px;">Пока нет пунктов расписания.</div>';
+      return;
+    }
+    scheduleList.sort(function (a, b) { return (a.h * 60 + a.m) - (b.h * 60 + b.m); });
+    grid.innerHTML = scheduleList.map(function (s, i) {
+      return '<div class="sched-item">' +
+        '<input type="time" value="' + String(s.h).padStart(2, '0') + ':' + String(s.m).padStart(2, '0') + '" onchange="schedSetTime(' + i + ', this.value)" data-idx="' + i + '">' +
+        '<select onchange="schedSetScene(' + i + ', this.value)">' +
+          '<option value="home"' + (s.scene === 'home' ? ' selected' : '') + '>Привет, я дома</option>' +
+          '<option value="evening"' + (s.scene === 'evening' ? ' selected' : '') + '>Вечер</option>' +
+          '<option value="cinema"' + (s.scene === 'cinema' ? ' selected' : '') + '>Кино</option>' +
+          '<option value="morning"' + (s.scene === 'morning' ? ' selected' : '') + '>Утро</option>' +
+          '<option value="night"' + (s.scene === 'night' ? ' selected' : '') + '>Ночь</option>' +
+          '<option value="away"' + (s.scene === 'away' ? ' selected' : '') + '>Я ушёл</option>' +
+        '</select>' +
+        '<span class="sub" style="font-size:11px;" id="schedState_' + i + '"></span>' +
+        '<button class="settings-close" onclick="schedRemove(' + i + ')">✕</button>' +
+        '</div>';
+    }).join('');
+  }
+  function schedSetTime(i, val) {
+    if (/^\d{2}:\d{2}$/.test(val)) {
+      const [h, m] = val.split(':').map(Number);
+      scheduleList[i].h = h;
+      scheduleList[i].m = m;
+    }
+    saveSchedule();
+    markSchedChanged();
+  }
+  function schedSetScene(i, sc) {
+    scheduleList[i].scene = sc;
+    saveSchedule();
+    markSchedChanged();
+  }
+  function schedRemove(i) {
+    scheduleList.splice(i, 1);
+    saveSchedule();
+    markSchedChanged();
+  }
+  function addSchedRow() {
+    if (scheduleList.length >= 8) { showToast('Максимум 8 пунктов расписания'); return; }
+    scheduleList.push({ h: 7, m: 0, scene: 'morning' });
+    saveSchedule();
+    markSchedChanged();
+  }
+  function markSchedChanged() {
+    document.querySelectorAll('[id^=schedState_]').forEach(function (el) { el.textContent = 'не отправлено'; });
+    syncAfter(100);
+  }
+  // Отправка расписания на контроллер (команды SCHED/SCHEDDEL)
+  function syncSchedule() {
+    sendToSerial('SCHEDDEL=*');
+    scheduleList.forEach(function (s) {
+      const mins = s.h * 60 + s.m;
+      sendToSerial('SCHED=' + mins + ':SCENE=' + s.scene);
+    });
+    document.querySelectorAll('[id^=schedState_]').forEach(function (el) { el.textContent = '✓ отправлено'; });
+    showToast('🗓 Расписание отправлено на контроллер');
+  }
+
+  // --- Sidebar настроек: heartbeat ---
+  function saveGuard() {
+    state.guardEnabled = $('guardOn').checked;
+    state.guardTimeout = parseInt($('guardTimeoutInput').value, 10) || 45;
+    sendToSerial('HBIT=' + (state.guardEnabled ? state.guardTimeout : 0));
+    showToast(state.guardEnabled ? '🛡 Сторожевой таймер включён (' + state.guardTimeout + ' c)' : '🛡 Сторожевой таймер выключен');
+  }
+
+  // --- Heartbeat + часы к контроллеру ---
+  function sendHeartbeat() {
+    if (!arduinoConnected && !wifiConnected) return;
+    sendToSerial('TS=' + Math.floor(Date.now() / 1000));
+    sendToSerial('HB');
+  }
+  setInterval(sendHeartbeat, 10000);
+
+  // --- Анимации иконок работающих устройств ---
+  function applyDevAnims() {
+    const el = $('statusPanel');
+    if (!el) return;
+    const a = {
+      animAc: state.ac,
+      animLed: state.led && state.ledBrightness > 0,
+      animHeat: state.temp >= 22 && state.pump,
+      animLight: state.mainLight,
+      animPump: state.pump,
+      animCurtains: state.curtains > 0 && state.curtains < 100 && curtainsMoving
+    };
+    Object.keys(a).forEach(function (cls) {
+      el.querySelectorAll('.' + cls).forEach(function (n) {
+        if (a[cls]) n.classList.add('active-anim');
+        else n.classList.remove('active-anim');
+      });
+    });
+  }
+
   // --- Управление устройствами ---
 
   function toggleMainLight(on) {
@@ -891,6 +1423,7 @@
       : '<span class="status-bulb"></span>Выключено';
     showToast(on ? '🔆 Основное освещение включено' : '🌙 Основное освещение выключено');
     sendToSerial('L=' + (on ? 1 : 0));
+    stateChanged(true);
     updateStatus();
   }
 
@@ -918,6 +1451,7 @@
       _ac(false);
     }
     syncAfter(150);
+    stateChanged(true);
     updateStatus();
   }
 
@@ -926,6 +1460,7 @@
     $('pump').checked = on;
     showToast(on ? '🌀 Мотор рециркуляции запущен' : '🌀 Мотор рециркуляции остановлен');
     sendToSerial('PUMP=' + (on ? 1 : 0));
+    stateChanged(true);
     updateStatus();
   }
 
@@ -939,6 +1474,7 @@
     updateLedPreview();
     showToast(on ? '✨ Подсветка включена (' + state.ledBrightness + '%)' : '🌑 Подсветка выключена');
     sendToSerial('LED=' + state.ledBrightness);
+    stateChanged(true);
     updateStatus();
   }
 
@@ -985,6 +1521,7 @@
       cancelAnimationFrame(curtainsAnimId);
       curtainsAnimId = null;
     }
+    curtainsMoving = false;
   }
 
   function applyCurtains(v) {
@@ -1009,10 +1546,15 @@
         curtainsAnimId = requestAnimationFrame(step);
       } else {
         curtainsAnimId = null;
-        if (!silent) showToast('🪟 Шторы ' + curtainsSuffix(to));
+        curtainsMoving = false;
+        if (!silent) {
+          showToast('🪟 Шторы ' + curtainsSuffix(to));
+          playConfirmSound();
+        }
       }
     }
     curtainsAnimId = requestAnimationFrame(step);
+    curtainsMoving = true;
   }
 
   function setCurtains(v, animate) {
@@ -1023,11 +1565,14 @@
       cancelCurtainsAnim();
       applyCurtains(target);
       showToast('🪟 Шторы ' + curtainsSuffix(target));
+      stateChanged(true);
       return;
     }
     if (state.curtains === target) {
       applyCurtains(target);
       showToast('🪟 Шторы ' + curtainsSuffix(target));
+      playConfirmSound();
+      stateChanged(true);
       return;
     }
     animateCurtains(state.curtains, target, false);
@@ -1120,6 +1665,7 @@
     showToast(on ? '❄ Кондиционер включён' : '❄ Кондиционер выключен');
     sendToSerial('AC=' + (on ? 1 : 0));
     syncAfter(120);
+    stateChanged(true);
     updateStatus();
   }
 
@@ -1127,6 +1673,7 @@
     _acTemp(v);
     showToast('❄ Кондиционер: ' + state.acTemp + ' °C');
     syncAfter(120);
+    stateChanged(true);
     updateStatus();
   }
 
@@ -1135,6 +1682,7 @@
     _acMode(m);
     showToast('❄ Режим кондиционера: ' + AC_MODES[m].label.replace(/^.. /, ''));
     sendToSerial('ACMODE=' + m);
+    stateChanged(true);
     updateStatus();
   }
 
@@ -1144,6 +1692,7 @@
     $('acFanValue').textContent = AC_FANS[state.acFan - 1];
     showToast('❄ Вентилятор кондиционера: ' + AC_FANS[state.acFan - 1]);
     syncAfter(120);
+    stateChanged(true);
     updateStatus();
   }
 
@@ -1212,8 +1761,10 @@
     const sc = scenarios[key];
     if (!sc) return;
     sc.run();
+    stateChanged(true);
     updateStatus();
     showToast('🎛️ Сценарий «' + sc.name + '» применён');
+    playSceneSound();
     sendToSerial('SCENE=' + key);
     syncAfter(150);
   }
@@ -1329,6 +1880,22 @@
       cancelCurtainsAnim();
       applyCurtains(parseInt(vals.CUR, 10));
     }
+    if ('CMAX' in vals && vals.CMAX !== '') {
+      const cm = parseInt(vals.CMAX, 10);
+      if (!isNaN(cm)) {
+        state.curtainMax = cm;
+        const inp = $('cmaxInput');
+        if (inp) inp.value = cm;
+      }
+    }
+    if ('HYST' in vals && vals.HYST !== '') {
+      const h = parseFloat(vals.HYST) / 10.0;
+      if (!isNaN(h) && h >= 0) {
+        state.hyst = Math.max(0.1, Math.min(2.0, h));
+        const inp = $('hystInput');
+        if (inp) inp.value = state.hyst.toFixed(1);
+      }
+    }
   }
 
   // Полная синхронизация состояния панели → Arduino
@@ -1342,6 +1909,11 @@
     sendToSerial('ACMODE=' + state.acMode);
     sendToSerial('ACFAN=' + state.acFan);
     sendToSerial('CUR=' + state.curtains);
+    sendToSerial('CMAX=' + state.curtainMax);
+    sendToSerial('HYST=' + state.hyst.toFixed(1));
+    sendToSerial('HBIT=' + (state.guardEnabled ? state.guardTimeout : 0));
+    syncSchedule();
+    sendHeartbeat();
   }
 
   // --- Связь по Wi-Fi (ESP8266 ESP-01, см. smart_home_wifi.ino) ---
@@ -1435,16 +2007,25 @@
   // --- Панель состояния ---
 
   function updateStatus() {
-    const icon = function (n, c) {
-      return '<span class="mat-icon filled" style="font-size:15px; color:' + (c || 'var(--accent)') + '; margin-right:6px; vertical-align:-2px;">' + n + '</span>';
+    const t = devNames();
+    const icon = function (n, c, anim) {
+      return '<span class="mat-icon filled ' + (anim || '') + '" style="font-size:15px; color:' + (c || 'var(--accent)') + '; margin-right:6px; vertical-align:-2px;">' + n + '</span>';
     };
+    const onCls = function (on) { return on ? 'status-line-on' : ''; };
+    const moving = curtainsMoving && state.curtains > 0 && state.curtains < 100;
     $('statusPanel').innerHTML =
-      '<div>' + icon('light_mode') + 'Основное освещение: <b>' + (state.mainLight ? 'включено' : 'выключено') + '</b></div>' +
-      '<div>' + icon('lightbulb') + 'Подсветка: <b>' + (state.led ? 'включена (' + state.ledBrightness + '%)' : 'выключена') + '</b></div>' +
-      '<div>' + icon('device_thermostat') + 'Отопление: <b>' + state.temp + ' °C</b></div>' +
-      '<div>' + icon('air') + 'Мотор рециркуляции: <b>' + (state.pump ? 'работает' : 'выключен') + '</b></div>' +
-      '<div>' + icon('ac_unit') + 'Кондиционер: <b>' + (state.ac ? 'включён (' + state.acTemp + ' °C, ' + AC_MODES[state.acMode].label.replace(/^.. /, '') + ')' : 'выключен') + '</b></div>' +
-      '<div>' + icon('vertical_shades') + 'Шторы: <b>' + curtainsLabel(state.curtains) + '</b></div>';
+      '<div>' + icon('light_mode', state.mainLight ? 'var(--green)' : '', 'anim-light' + (state.mainLight ? ' active-anim' : '')) + t.light + ': <b class="' + onCls(state.mainLight) + '">' + (state.mainLight ? 'включено' : 'выключено') + '</b></div>' +
+      '<div>' + icon('lightbulb', (state.led && state.ledBrightness > 0) ? 'var(--amber)' : '', 'anim-led' + (state.led && state.ledBrightness > 0 ? ' active-anim' : '')) + t.led + ': <b class="' + onCls(state.led && state.ledBrightness > 0) + '">' + (state.led ? 'включена (' + state.ledBrightness + '%)' : 'выключена') + '</b></div>' +
+      '<div>' + icon('device_thermostat', (state.temp >= 24 && state.pump) ? 'var(--amber)' : '', 'anim-heat' + (state.temp >= 24 && state.pump ? ' active-anim' : '')) + t.heat + ': <b>' + state.temp + ' °C</b></div>' +
+      '<div>' + icon('air', state.pump ? 'var(--green)' : '', 'anim-pump' + (state.pump ? ' active-anim' : '')) + t.pump + ': <b class="' + onCls(state.pump) + '">' + (state.pump ? 'работает' : 'выключен') + '</b></div>' +
+      '<div>' + icon('ac_unit', state.ac ? 'var(--accent)' : '', 'anim-ac' + (state.ac ? ' active-anim' : '')) + t.ac + ': <b class="' + onCls(state.ac) + '">' + (state.ac ? 'включён (' + state.acTemp + ' °C, ' + AC_MODES[state.acMode].label.replace(/^.. /, '') + ')' : 'выключен') + '</b></div>' +
+      '<div>' + icon('vertical_shades', moving ? 'var(--accent)' : '', 'anim-curtains' + (moving ? ' active-anim' : '')) + t.curtains + ': <b>' + curtainsLabel(state.curtains) + '</b></div>';
+  }
+
+  // --- Звук и анимации при изменениях состояния ---
+  function stateChanged(sound) {
+    applyDevAnims();
+    if (sound) playConfirmSound();
   }
 
   // --- Голосовое управление ---
@@ -1985,6 +2566,14 @@
       setTimeout(startVoice, 400);
     }
   });
+
+  // Восстановление сохранённых настроек
+  (function () {
+    applyTheme(storeGet('theme', 'dark'));
+    loadSchedule();
+    updateDeviceTitles();
+    applyDevAnims();
+  })();
 
   // Подгонка интерфейса под один экран: если содержимое выше окна — масштабируем
   function fitToScreen() {

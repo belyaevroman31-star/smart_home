@@ -14,6 +14,16 @@
 //   GET /status        → ответить текущим состоянием
 //   GET /              → то же, состояние
 //   Ответ тела:  L=..;LED=..;TEMP=..;PUMP=..;AC=..;ACTEMP=..;ACMODE=..;ACFAN=..;CUR=..
+//   Дополнительные команды:
+//   CMAX=500..20000 — калибровка штор (шагов на 100%)
+//   HYST=0.1..2.0 — порог срабатывания климат-автоматики, °C
+//   TS=<unix> — установка часов (эпоха, секунды) — для расписания
+//   SCHED=<мин>:<команда> — расписание (0..1439 минут от полуночи)
+//   SCHEDDEL=<мин> — удалить пункт расписания по времени
+//   HB — heartbeat от панели (сторожевой таймер)
+//   HBIT=<сек> — период heartbeat, 0 — сторожевой таймер выключен
+//   При отсутствии heartbeat дольше заданного времени контроллер сам
+//   возвращает сценарий «дома» (защита от зависшей панели).
 //
 // Соединение ESP-01 ↔ Nano (SoftwareSerial):
 //   Nano A2 (RX, pin16) ← ESP TX
@@ -53,7 +63,8 @@ SoftwareSerial esp(ESP_RX_PIN, ESP_TX_PIN);
 
 // --- Шторы (28BYJ-48 + ULN2003, D8–D11) ---
 AccelStepper curtains(AccelStepper::FULL4WIRE, 8, 9, 10, 11);
-const long CURTAIN_MAX_STEPS = 4000;
+long curtainMaxSteps = 4000;   // калибровка: сколько шагов на 100% хода штор (команда CMAX=)
+float curtainHysteresis = 0.5f; // порог срабатывания климат-автоматики, °C (команда HYST=)
 const float CURTAIN_SPEED = 600;
 const float CURTAIN_ACCEL = 800;
 int curtainPercent = 0;
@@ -73,6 +84,24 @@ int acOn      = 0;
 int acFan     = 1;
 String acMode = "cool";
 int acTemp    = 22;
+
+// Часы (software): устанавливаются командой TS=<unix> от панели.
+unsigned long clockBaseMillis = 0;
+unsigned long clockBaseEpoch  = 0;
+bool clockSynced = false;
+
+// Расписание: до 8 пунктов, время в минутах от полуночи.
+#define SCHED_SLOTS 8
+String schedTime[SCHED_SLOTS];
+String schedCmd[SCHED_SLOTS];
+int lastSchedMinute = -1;
+
+// Heartbeat / сторожевой таймер: нет ответа панели → сценарий «дома».
+unsigned long lastHeartbeat = 0;
+unsigned long guardTimeout  = 45000UL;
+bool guardEnabled = true;
+bool guardSynced  = false;
+bool guardTriggered = false;
 
 // ------------------------------------------------------------------
 // ESP-01: AT команды
@@ -224,10 +253,70 @@ void espFeed(char c) {
 // ------------------------------------------------------------------
 // Команды (общие для Web Serial и HTTP)
 // ------------------------------------------------------------------
+int currentMinute() {
+  if (!clockSynced) return -1;
+  unsigned long epoch = clockBaseEpoch + (millis() - clockBaseMillis) / 1000UL;
+  return (int)((epoch / 60UL) % 1440UL);
+}
+
+void addSchedule(String val) {
+  // Формат: <минуты от полуночи>:<команда>, например "420:SCENE=morning"
+  int colon = val.indexOf(':');
+  if (colon < 0) return;
+  String mins = val.substring(0, colon);
+  String cmd = val.substring(colon + 1);
+  int m = mins.toInt();
+  if (m < 0 || m > 1439 || cmd.length() == 0) return;
+  for (int i = 0; i < SCHED_SLOTS; i++) {
+    if (schedTime[i].length() > 0 && schedTime[i].toInt() == m) { schedCmd[i] = cmd; return; }
+  }
+  for (int i = 0; i < SCHED_SLOTS; i++) {
+    if (schedTime[i].length() == 0) { schedTime[i] = mins; schedCmd[i] = cmd; return; }
+  }
+  schedTime[0] = mins; schedCmd[0] = cmd;
+}
+
+void removeSchedule(int minute) {
+  for (int i = 0; i < SCHED_SLOTS; i++) {
+    if (schedTime[i].length() > 0 && schedTime[i].toInt() == minute) { schedTime[i] = ""; schedCmd[i] = ""; }
+  }
+}
+
+void checkSchedule() {
+  int nowMin = currentMinute();
+  if (nowMin < 0 || nowMin == lastSchedMinute) return;
+  lastSchedMinute = nowMin;
+  for (int i = 0; i < SCHED_SLOTS; i++) {
+    if (schedTime[i].length() == 0) continue;
+    if (schedTime[i].toInt() == nowMin) {
+      Serial.print("SCHED="); Serial.println(schedCmd[i]);
+      handleCommand(schedCmd[i]);
+    }
+  }
+}
+
+void checkGuard() {
+  if (!guardEnabled || !guardSynced) return;
+  if (guardTriggered) return;
+  if (millis() - lastHeartbeat > guardTimeout) {
+    guardTriggered = true;
+    Serial.println("GUARD=home");
+    runScene("home");
+  }
+}
+
+void clearSchedule() {
+  for (int i = 0; i < SCHED_SLOTS; i++) {
+    schedTime[i] = "";
+    schedCmd[i] = "";
+  }
+}
+
 void handleCommand(String line) {
   int eq = line.indexOf('=');
   if (eq < 0) {
     if (line == "?") sendStatus();
+    else if (line == "HB") { lastHeartbeat = millis(); guardSynced = true; guardTriggered = false; }
     return;
   }
   String key = line.substring(0, eq);
@@ -242,8 +331,14 @@ void handleCommand(String line) {
   else if (key == "ACTEMP")  acTemp = constrain(iv, 16, 30);
   else if (key == "ACMODE")  { acMode = val; acMode.trim(); }
   else if (key == "ACFAN")   { acFan = constrain(iv, 1, 3); applyACFan(); }
-  else if (key == "CUR")     { curtainPercent = constrain(iv, 0, 100); curtains.moveTo((long)curtainPercent * CURTAIN_MAX_STEPS / 100L); }
+  else if (key == "CUR")     { curtainPercent = constrain(iv, 0, 100); curtains.moveTo((long)curtainPercent * curtainMaxSteps / 100L); }
   else if (key == "SCENE")   runScene(val);
+  else if (key == "CMAX")    curtainMaxSteps = constrain(iv, 500, 20000);
+  else if (key == "HYST")    curtainHysteresis = constrain(val.toFloat(), 0.1f, 2.0f);
+  else if (key == "TS")      { clockBaseEpoch = val.toInt(); clockBaseMillis = millis(); clockSynced = true; }
+  else if (key == "HBIT")    { guardTimeout = (unsigned long)constrain(iv, 0, 3600) * 1000UL; guardEnabled = (iv > 0); if (!guardEnabled) guardTriggered = false; }
+  else if (key == "SCHEDDEL") { if (val == "*") clearSchedule(); else removeSchedule(val.toInt()); }
+  else if (key == "SCHED")   addSchedule(val);
 }
 
 void mainLightSet(int on) {
@@ -260,6 +355,11 @@ void pumpSet(int on) {
 }
 void acPowerSet(int on) {
   acOn = on ? 1 : 0;
+  // Защита от параллельного включения: нагрев и кондиционер не работают вместе
+  if (acOn) {
+    digitalWrite(PIN_HEAT_RELAY, LOW);
+    if (acMode == "cool" || acMode == "auto") heatTemp = min(heatTemp, acTemp - 1);
+  }
   digitalWrite(PIN_AC_POWER, acOn);
   if (!acOn) analogWrite(PIN_AC_FAN, 0);
   else applyACFan();
@@ -277,16 +377,34 @@ void runScene(String name) {
   else if (name == "morning") { curtainPercent = 0; ledSet(40); heatTemp = 22; }
   else if (name == "night")   { mainLightSet(0); ledSet(0); heatTemp = 19; curtainPercent = 100; }
   else if (name == "away")    { mainLightSet(0); ledSet(0); heatTemp = 19; pumpSet(0); acPowerSet(0); acFan = 1; curtainPercent = 0; }
-  curtains.moveTo((long)curtainPercent * CURTAIN_MAX_STEPS / 100L);
+  curtains.moveTo((long)curtainPercent * curtainMaxSteps / 100L);
 }
+
+// Климат-автоматика по датчику (опция): защита от одновременного
+// включения нагрева и кондиционера — греем только при выключенном AC.
+#if USE_TEMP_SENSOR
+void updateClimate() {
+  if (indoorTemp <= heatTemp - curtainHysteresis) {
+    if (acOn == 0) { digitalWrite(PIN_HEAT_RELAY, HIGH); pumpSet(1); }
+  } else if (indoorTemp >= heatTemp + curtainHysteresis) {
+    digitalWrite(PIN_HEAT_RELAY, LOW);
+    if (acOn == 0) pumpSet(0);
+  }
+  if (acOn && (acMode == "cool" || acMode == "auto")) {
+    if (indoorTemp >= acTemp + curtainHysteresis) applyACFan();
+    else analogWrite(PIN_AC_FAN, 0);
+  }
+}
+#endif
 
 // ------------------------------------------------------------------
 // Состояние (ответы)
 // ------------------------------------------------------------------
 void statusInto(char* buf, int maxLen) {
   snprintf(buf, maxLen,
-    "L=%d;LED=%d;TEMP=%d;PUMP=%d;AC=%d;ACTEMP=%d;ACMODE=%s;ACFAN=%d;CUR=%d",
-    mainLight, ledVal, heatTemp, pumpOn, acOn, acTemp, acMode.c_str(), acFan, curtainPercent);
+    "L=%d;LED=%d;TEMP=%d;PUMP=%d;AC=%d;ACTEMP=%d;ACMODE=%s;ACFAN=%d;CUR=%d;CMAX=%ld;HYST=%d",
+    mainLight, ledVal, heatTemp, pumpOn, acOn, acTemp, acMode.c_str(), acFan, curtainPercent,
+    (long)curtainMaxSteps, (int)(curtainHysteresis * 10.0f + 0.5f));
 }
 
 void sendStatus() {
@@ -365,8 +483,12 @@ void loop() {
   }
 
   // --- Шторы ---
-  curtains.moveTo((long)curtainPercent * CURTAIN_MAX_STEPS / 100L);
+  curtains.moveTo((long)curtainPercent * curtainMaxSteps / 100L);
   if (curtains.distanceToGo() != 0) curtains.run();
+
+  // --- Расписание и сторожевой таймер ---
+  checkSchedule();
+  checkGuard();
 
   // --- Датчик температуры (опция) ---
 #if USE_TEMP_SENSOR
