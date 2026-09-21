@@ -269,6 +269,16 @@ void ledSet(int p) {
 void pumpSet(int on) {
   pumpOn = on ? 1 : 0;
   digitalWrite(PIN_PUMP, pumpOn);
+#if !USE_TEMP_SENSOR
+  heatRelaySync();
+#endif
+}
+
+// Без датчика температуры реле нагрева управляется логикой насоса/кондиционера:
+// нагреватель включается вместе с насосом, но никогда не работает одновременно
+// с кондиционером (защита от параллельного включения).
+void heatRelaySync() {
+  digitalWrite(PIN_HEAT_RELAY, (pumpOn && acOn == 0) ? HIGH : LOW);
 }
 
 void acPowerSet(int on) {
@@ -278,6 +288,10 @@ void acPowerSet(int on) {
     digitalWrite(PIN_HEAT_RELAY, LOW);
     if (acMode == "cool" || acMode == "auto") heatTemp = min(heatTemp, acTemp - 1);
   }
+#if !USE_TEMP_SENSOR
+  // Без датчика нагрев следует за насосом: вернули управление реле логике насоса
+  if (!acOn) heatRelaySync();
+#endif
   digitalWrite(PIN_AC_POWER, acOn);
   if (!acOn) analogWrite(PIN_AC_FAN, 0);
   else applyACFan();
