@@ -554,6 +554,16 @@
   .voice-popup-action { font-size: 13px; color: var(--green); }
 
   /* --- Кнопки обучения и своих фраз --- */
+  .vc-full-title-list { font-size: 12px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--accent); margin: 14px 0 6px; display: flex; align-items: center; gap: 6px; }
+  .full-cmd-row { border: 1px solid rgba(128, 200, 255, 0.25); background: rgba(90, 170, 255, 0.06); border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; }
+  .full-cmd-title { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .full-cmd-action { color: var(--muted); font-size: 12px; margin: 2px 0; }
+  .full-cmd-phrases { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .full-actions-inline { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  .full-dictate-group { display: flex; align-items: center; gap: 6px; }
+  .full-listening { border-color: rgba(255, 190, 70, 0.8) !important; }
+  .mat-icon.cmd-full { color: var(--accent); }
+
   .voice-tools { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
   .voice-tool-btn {
     display: inline-flex;
@@ -570,6 +580,18 @@
   }
   .voice-tool-btn:hover { background: rgba(255, 255, 255, 0.18); border-color: var(--accent); }
   .voice-tool-btn .mat-icon { font-size: 17px; }
+  /* --- Мои команды (целиком) --- */
+  .full-list { display: flex; flex-direction: column; gap: 8px; }
+  .full-row { border: 1px solid var(--stroke); border-radius: 12px; padding: 10px 12px; background: var(--glass); }
+  .full-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .full-phrases { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .full-phrase { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--stroke); background: rgba(255,255,255,0.06); }
+  .full-dictate { margin-left: auto; }
+  .full-note { color: var(--muted); font-size: 11px; margin: 4px 0 8px; }
+  .full-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .full-inputline { display: flex; gap: 6px; }
+  .full-inputline .settings-input { flex: 1; }
+  .full-inputline .settings-btn-sm { flex: 0 0 auto; }
 
   /* --- Режим обучения голосовых команд --- */
   .train-overlay {
@@ -1078,6 +1100,8 @@
       <div class="voice-tools">
         <button class="voice-tool-btn" onclick="openVoiceTrain()"><span class="mat-icon filled">school</span> Режим обучения</button>
         <button class="voice-tool-btn" onclick="openVoiceCustomize()"><span class="mat-icon filled">edit_note</span> Свои фразы</button>
+        <button class="voice-tool-btn" onclick="openFullCommandNew()"><span class="mat-icon filled">add_box</span> Новая команда целиком</button>
+        <button class="voice-tool-btn" onclick="openFullCommandNew()"><span class="mat-icon filled">add_box</span> Новая команда целиком</button>
       </div>
     </div>
   </div>
@@ -1282,6 +1306,34 @@
     </h2>
     <div class="sub">Для каждого действия задайте свои фразы через запятую. Нажмите 🎤, чтобы надиктовать фразу. Пусто — используются стандартные команды.</div>
     <div id="voiceCustomList"></div>
+  </div>
+</div>
+
+<div class="settings-overlay" id="fullCmdNewOverlay" onclick="if (event.target === this) closeFullCommandNew()">
+  <div class="settings-panel">
+    <h2><span class="mat-icon filled cmd-full">add_box</span> Создать команду целиком
+      <button class="settings-close" onclick="closeFullCommandNew()">✕</button>
+    </h2>
+    <div class="sub">Команда целиком — это ваша собственная команда: своё название, свой набор надиктованных фраз и действие, которое будет выполняться при её распознавании. Надиктуйте фразу — она добавится к списку автоматически (можно несколько, каждую по отдельности).</div>
+    <div class="full-actions-inline">
+      <label style="flex:0 0 auto;">Название</label>
+      <input class="settings-input" id="fcNewTitle" placeholder="напр. «Включить все огни»" style="flex:1;">
+    </div>
+    <div class="full-actions-inline">
+      <label style="flex:0 0 auto;">Действие при распознавании</label>
+      <select class="settings-input" id="fcNewAction" style="flex:1;"></select>
+    </div>
+    <div class="full-actions-inline">
+      <label style="flex:0 0 auto;">Фразы (диктуйте или впишите через запятую)</label>
+      <input class="settings-input" id="fcNewPhrases" placeholder="напр. «включи чайник», «вскипяти воду»" style="flex:1;" onfocus="clearFcPhraseHint()">
+      <div class="full-dictate-group">
+        <button class="settings-btn-sm" onclick="dictateFullCmdPhrase(this)">🎤 Надиктовать</button>
+      </div>
+    </div>
+    <div class="full-actions-inline" style="justify-content:flex-end; margin-top:14px;">
+      <button class="settings-btn" onclick="saveFullCmdNew()"><span class="mat-icon filled">save</span> Сохранить команду</button>
+      <button class="settings-btn" onclick="closeFullCommandNew()">Отмена</button>
+    </div>
   </div>
 </div>
 
@@ -2649,9 +2701,193 @@
     return e.test ? e.test(text) : false;
   }
 
+  // --- Команды целиком (свои): название + фразы + действие, высший приоритет ---
+  let fullCmds = [];
+  function loadFullCmds() {
+    try { fullCmds = JSON.parse(localStorage.getItem('voiceFullCmds') || '[]') || []; }
+    catch (err) { fullCmds = []; }
+    if (!Array.isArray(fullCmds)) fullCmds = [];
+  }
+  loadFullCmds();
+  function saveFullCmds() { localStorage.setItem('voiceFullCmds', JSON.stringify(fullCmds)); }
+  const FULL_SCENE_KEYS = ['home', 'evening', 'cinema', 'morning', 'night', 'away'];
+  function buildFullActionOptions() {
+    let html = '';
+    let lastGroup = '';
+    for (let i = 0; i < VOICE_PLAN.length; i++) {
+      const e = VOICE_PLAN[i];
+      if (e.group !== lastGroup) {
+        if (lastGroup) html += '</optgroup>';
+        html += '<optgroup label="' + escAttr(e.group) + '">';
+        lastGroup = e.group;
+      }
+      html += '<option value="' + escAttr(e.id) + '" val-group="' + escAttr(e.group) + '">' + escAttr(e.title) + '</option>';
+    }
+    if (lastGroup) html += '</optgroup>';
+    html += '<optgroup label="Сценарии">';
+    for (let k = 0; k < FULL_SCENE_KEYS.length; k++) {
+      const key = FULL_SCENE_KEYS[k];
+      if (scenarios[key]) html += '<option value="scene:' + key + '">Сценарий «' + escAttr(scenarios[key].name) + '»</option>';
+    }
+    html += '</optgroup>';
+    return html;
+  }
+  function renderFullCmds() {
+    const box = $('fullCmdList');
+    if (!box) return;
+    if (fullCmds.length === 0) { box.innerHTML = ''; return; }
+    let html = '<div class="vc-group-title cmd-full"><span class="mat-icon filled cmd-full">star</span> Мои команды целиком (' + fullCmds.length + ')</div>';
+    for (let i = 0; i < fullCmds.length; i++) {
+      const c = fullCmds[i];
+      let actionLabel = c.actionLabel;
+      if (!actionLabel) {
+        let found = '';
+        for (let z = 0; z < VOICE_PLAN.length; z++) {
+          if (VOICE_PLAN[z].id === c.actionId) { found = VOICE_PLAN[z].title; break; }
+        }
+        if (!found && c.actionId && c.actionId.indexOf('scene:') === 0) {
+          const key = c.actionId.slice(6);
+          if (scenarios[key]) found = 'Сценарий «' + scenarios[key].name + '»';
+        }
+        actionLabel = found;
+      }
+      let phrasesHtml = '';
+      for (let j = 0; j < c.phrases.length; j++) {
+        phrasesHtml += '<span class="vc-phrase">' + escAttr(c.phrases[j]) + '</span>';
+      }
+      html += '<div class="full-cmd-row">' +
+        '<div class="full-cmd-title"><span class="mat-icon filled cmd-full">add_box</span> ' + escAttr(c.title) + '</div>' +
+        '<div class="full-cmd-action">→ ' + escAttr(actionLabel || c.actionId) + '</div>' +
+        '<div class="full-cmd-phrases">' + phrasesHtml + '</div>' +
+        '<div class="voice-tools" style="margin-top:6px;justify-content:flex-start;">' +
+          '<button class="settings-btn-sm" onclick="dictateMoreFullPhrase(this, ' + i + ')">🎤 Доп. фраза</button>' +
+          '<button class="settings-btn-sm" style="color:var(--danger);" onclick="deleteFullCmd(' + i + ')">✕</button>' +
+        '</div>' +
+      '</div>';
+    }
+    box.innerHTML = html;
+  }
+  function matchFullCmd(text) {
+    for (let i = 0; i < fullCmds.length; i++) {
+      const c = fullCmds[i];
+      for (let j = 0; j < c.phrases.length; j++) {
+        if (containsPhrase(text, c.phrases[j])) {
+          const num = spokenNumber(text);
+          return { cmd: c, num: num };
+        }
+      }
+    }
+    return null;
+  }
+  function runFullCmd(matchFull, text) {
+    const c = matchFull.cmd;
+    if (c.actionId && c.actionId.indexOf('scene:') === 0) {
+      const key = c.actionId.slice(6);
+      if (runScenario(key)) return 'Сценарий «' + scenarios[key].name + '»';
+      return '';
+    }
+    for (let z = 0; z < VOICE_PLAN.length; z++) {
+      if (VOICE_PLAN[z].id === c.actionId) {
+        const label = VOICE_PLAN[z].run(matchFull.num, text);
+        return label || '';
+      }
+    }
+    return '';
+  }
+  function openFullCommandNew() {
+    const sel = $('fcNewAction');
+    sel.innerHTML = buildFullActionOptions();
+    $('fcNewTitle').value = '';
+    $('fcNewPhrases').value = '';
+    $('fullCmdNewOverlay').classList.add('open');
+  }
+  function closeFullCommandNew() { $('fullCmdNewOverlay').classList.remove('open'); }
+  function clearFcPhraseHint() { /* ничего */ }
+  function dictateFullCmdPhrase(btn) {
+    if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) { showToast('Распознавание не поддерживается этим браузером'); return; }
+    const old = btn.textContent;
+    btn.classList.add('full-listening');
+    btn.textContent = '…';
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'ru-RU';
+    rec.interimResults = false;
+    rec.maxAlternatives = 3;
+    rec.onresult = function (event) {
+      let best = '';
+      for (let a = 0; a < event.results[0].length; a++) {
+        const t = norm(event.results[0][a].transcript);
+        if (t.length > best.length) best = t;
+      }
+      const inp = $('fcNewPhrases');
+      inp.value = (inp.value.trim() ? inp.value.trim() + ', ' : '') + best;
+      showToast('Фраза добавлена: «' + best + '»');
+      inp.focus();
+    };
+    rec.onerror = function (event) { showToast('Ошибка распознавания: ' + event.error); };
+    rec.onend = function () { btn.classList.remove('full-listening'); btn.textContent = old; };
+    try { rec.start(); } catch (err) { btn.classList.remove('full-listening'); btn.textContent = old; }
+  }
+  function saveFullCmdNew() {
+    const title = norm($('fcNewTitle').value);
+    const actionId = $('fcNewAction').value;
+    const rawPhrases = $('fcNewPhrases').value;
+    if (!title) { showToast('Укажите название команды'); return; }
+    if (!actionId) { showToast('Выберите действие'); return; }
+    const phrases = [];
+    const parts = rawPhrases.split(',');
+    for (let i = 0; i < parts.length; i++) {
+      const ph = norm(parts[i]);
+      if (ph) phrases.push(ph);
+    }
+    if (phrases.length === 0) { showToast('Добавьте хотя бы одну фразу (надиктуйте или впишите)'); return; }
+    const obj = { id: Date.now(), title: title, actionId: actionId, phrases: phrases, actionLabel: '' };
+    fullCmds.push(obj);
+    saveFullCmds();
+    closeFullCommandNew();
+    renderFullCmds();
+    showToast('Команда «' + title + '» сохранена (' + phrases.length + ' фраз)');
+  }
+  function dictateMoreFullPhrase(btn, idx) {
+    if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) { showToast('Распознавание не поддерживается'); return; }
+    const old = btn.textContent;
+    btn.classList.add('full-listening');
+    btn.textContent = '…';
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'ru-RU';
+    rec.interimResults = false;
+    rec.maxAlternatives = 3;
+    rec.onresult = function (event) {
+      let best = '';
+      for (let a = 0; a < event.results[0].length; a++) {
+        const t = norm(event.results[0][a].transcript);
+        if (t.length > best.length) best = t;
+      }
+      fullCmds[idx].phrases.push(best);
+      saveFullCmds();
+      renderFullCmds();
+      showToast('Фраза «' + best + '» добавлена к команде');
+    };
+    rec.onerror = function (event) { showToast('Ошибка: ' + event.error); };
+    rec.onend = function () { btn.classList.remove('full-listening'); btn.textContent = old; };
+    try { rec.start(); } catch (err) { btn.classList.remove('full-listening'); btn.textContent = old; }
+  }
+  function deleteFullCmd(idx) {
+    fullCmds.splice(idx, 1);
+    saveFullCmds();
+    renderFullCmds();
+    showToast('Команда удалена');
+  }
+
   function processVoiceCommand(raw) {
     const text = norm(raw);
     let action = '';
+
+    // Полностью пользовательские команды — высший приоритет (созданы целиком)
+    const fullMatch = matchFullCmd(text);
+    if (fullMatch) {
+      const label = runFullCmd(fullMatch, text);
+      if (label) return label;
+    }
 
     // Обученные (пользовательские) фразы имеют приоритет над стандартными
     const custom = matchCustomVoice(text);
@@ -3077,7 +3313,8 @@
     return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   }
   function renderVoiceCustomize() {
-    let html = '';
+    let html = '<div id="fullCmdList"></div>';
+    renderFullCmds();
     let lastGroup = '';
     VOICE_PLAN.forEach(function (e) {
       if (e.group !== lastGroup) {
